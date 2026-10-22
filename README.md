@@ -1,58 +1,171 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🍽️ E-Kantin Sekolah (`bi-kantin-web`)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem informasi dan pemesanan kantin sekolah berbasis web yang dibangun menggunakan **Laravel 11** dan **Bootstrap 5**. Aplikasi ini mempermudah siswa dalam memesan makanan/minuman secara efisien serta membantu pengelola kantin dalam memantau dan memperbarui status pesanan secara *real-time*.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- 🔐 **Autentikasi & Multi-Role**: Sistem login role-based untuk **Admin** dan **Siswa**.
+- 👨‍🍳 **Panel Admin**:
+  - Ringkasan statistik (Total Menu, Pesanan Menunggu Konfirmasi, Total Pesanan).
+  - Manajemen Menu Makanan & Minuman (Tambah, Edit, Hapus / CRUD).
+  - Monitoring pesanan masuk dengan fitur pengubahan status secara instan (*Menunggu Konfirmasi*, *Sedang Diproses*, *Siap Diambil*, *Selesai*, *Dibatalkan*).
+- 🧑‍🎓 **Panel Siswa**:
+  - Katalog menu makanan dan minuman responsif.
+  - Form pemesanan dengan penentuan jumlah porsi (*qty*) dan kalkulasi otomatis total harga.
+  - Monitoring status pesanan secara **real-time** (auto-refresh tanpa perlu reload halaman penuh).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🛠️ Prasyarat Sistem
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Pastikan perangkat Anda telah terinstall:
+- **PHP** >= 8.2
+- **Composer** (Package Manager PHP)
+- **MySQL / MariaDB** (bisa menggunakan XAMPP, Laragon, atau MySQL service native)
+- Git (opsional)
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 🚀 Panduan Instalasi Langkah-demi-Langkah
 
-## Agentic Development
+Ikuti langkah-langkah berikut untuk menjalankan project ini di komputer lokal:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+### 1. Clone Repository & Masuk ke Folder Project
+Jika mendownload via Git:
 ```bash
-composer require laravel/boost --dev
+git clone https://github.com/username-anda/bi-kantin-web.git
+cd bi-kantin-web
+```
+*(Atau ekstrak file zip project dan buka terminal di dalam direktori `bi-kantin-web`)*.
 
-php artisan boost:install
+---
+
+### 2. Install Dependensi Composer
+Jalankan perintah berikut untuk mengunduh semua library Laravel:
+```bash
+composer install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+### 3. Buat Database MySQL
+Nyalakan MySQL (misalnya melalui panel **XAMPP** atau **Laragon**), lalu buat database baru bernama `db_bikantin`:
+- Melalui **phpMyAdmin**: Buat database baru bernama `db_bikantin`
+- Atau melalui **MySQL CLI**:
+  ```sql
+  CREATE DATABASE db_bikantin;
+  ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+### 4. Salin & Sesuaikan File Konfigurasi `.env`
+Salin file `.env.example` menjadi `.env`:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**Linux / macOS:**
+```bash
+cp .env.example .env
+```
 
-## Security Vulnerabilities
+**Windows (Command Prompt / PowerShell):**
+```cmd
+copy .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Buka file `.env` dan pastikan konfigurasi database sudah sesuai dengan MySQL lokal Anda:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=db_bikantin
+DB_USERNAME=root
+DB_PASSWORD=
+```
+> *Catatan: Jika MySQL Anda menggunakan password, isi bagian `DB_PASSWORD`.*
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 5. Generate Application Key
+Buat kunci enkripsi aplikasi Laravel:
+```bash
+php artisan key:generate
+```
+
+---
+
+### 6. Jalankan Migrasi Database & Seeder
+Buat seluruh tabel dan isi data awal (akun login & contoh menu) secara otomatis:
+```bash
+php artisan migrate --seed
+```
+> **Tips:** Jika ingin mereset ulang seluruh isi database dari awal, gunakan:
+> ```bash
+> php artisan migrate:fresh --seed
+> ```
+
+---
+
+### 7. Jalankan Server Development
+Jalankan web server lokal Laravel:
+```bash
+php artisan serve
+```
+
+Aplikasi siap diakses melalui browser di:
+👉 **`http://127.0.0.1:8000`** atau **`http://localhost:8000`**
+
+---
+
+## 🔑 Akun Uji Coba Default
+
+Setelah menjalankan migrasi dan seeder, Anda dapat langsung login menggunakan akun berikut:
+
+| Role | Username | Password | Deskripsi Halaman |
+| :--- | :--- | :--- | :--- |
+| **Admin** | `admin_kantin` | `admin123` | Dashboard pengelolaan menu (CRUD) & pemantauan status pesanan |
+| **Siswa** | `budi_siswa` | `123` | Katalog menu, pemesanan, dan monitoring status live |
+
+---
+
+## 🗄️ Struktur Database
+
+Database `db_bikantin` terdiri dari 3 tabel utama:
+
+1. **`users`**
+   - `id` (Primary Key, Auto Increment)
+   - `username` (VARCHAR 50)
+   - `password` (VARCHAR 50)
+   - `role` (ENUM: `'admin'`, `'siswa'`)
+2. **`menu`**
+   - `id` (Primary Key, Auto Increment)
+   - `nama_menu` (VARCHAR 100)
+   - `harga` (INT)
+   - `kategori` (VARCHAR 50: Makanan, Minuman, Camilan, dll.)
+3. **`pesanan`**
+   - `id` (Primary Key, Auto Increment)
+   - `user_id` (Foreign Key -> `users.id`)
+   - `menu_id` (Foreign Key -> `menu.id`)
+   - `jumlah` (INT)
+   - `total_harga` (INT)
+   - `status` (VARCHAR 100, default `'Menunggu Konfirmasi'`)
+
+---
+
+## 🧪 Menjalankan Pengujian (Automated Tests)
+
+Project ini telah dilengkapi dengan unit/feature test otomatis untuk memvalidasi alur autentikasi, CRUD menu, proteksi hak akses, dan proses pemesanan:
+```bash
+php artisan test
+```
+
+---
+
+## 💡 Troubleshooting
+
+- **Error: `Access denied for user 'root'@'localhost'`**
+  - Pastikan `DB_USERNAME` dan `DB_PASSWORD` di file `.env` sudah sesuai dengan pengaturan MySQL Anda.
+- **Error: `Unknown database 'db_bikantin'`**
+  - Buat terlebih dahulu database `db_bikantin` di phpMyAdmin sebelum menjalankan `php artisan migrate`.
+- **Tampilan CSS/Icons tidak muncul:**
+  - Aplikasi menggunakan CDN Bootstrap 5 dan Bootstrap Icons. Pastikan komputer Anda terhubung ke internet saat pertama kali mengakses aplikasi.
