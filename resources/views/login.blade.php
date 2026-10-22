@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Kantin Sekolah</title>
+    <title>Login - BI-Kantin</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -45,7 +45,7 @@
 <div class="login-card">
     <div class="login-header">
         <i class="bi bi-shop-window display-4"></i>
-        <h4 class="mt-2 mb-0 fw-bold">E-Kantin Sekolah</h4>
+        <h4 class="mt-2 mb-0 fw-bold">BI-Kantin</h4>
         <small class="opacity-75">Sistem Pemesanan Kantin</small>
     </div>
 

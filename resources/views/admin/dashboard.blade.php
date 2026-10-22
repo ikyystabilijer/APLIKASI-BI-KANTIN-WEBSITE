@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Kantin Sekolah</title>
+    <title>Admin Dashboard - BI-Kantin</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -47,7 +47,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-bold" href="{{ route('admin.dashboard') }}">
-            <i class="bi bi-shield-lock-fill me-1 text-primary"></i> E-Kantin <span class="badge bg-primary fs-6">Admin</span>
+            <i class="bi bi-shield-lock-fill me-1 text-primary"></i> BI-Kantin <span class="badge bg-primary fs-6">Admin</span>
         </a>
         <div class="d-flex align-items-center text-white">
             <span class="me-3 small d-none d-md-inline">

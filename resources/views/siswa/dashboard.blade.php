@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katalog & Pesanan Siswa - Kantin Sekolah</title>
+    <title>Katalog & Pesanan Siswa - BI-Kantin</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -60,7 +60,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-bold" href="{{ route('siswa.dashboard') }}">
-            <i class="bi bi-shop me-1"></i> E-Kantin <span class="badge bg-light text-primary fs-6">Siswa</span>
+            <i class="bi bi-shop me-1"></i> BI-Kantin <span class="badge bg-light text-primary fs-6">Siswa</span>
         </a>
         <div class="d-flex align-items-center gap-2">
             <!-- Tombol Keranjang Belanja (Catatan Guru No. 10) -->

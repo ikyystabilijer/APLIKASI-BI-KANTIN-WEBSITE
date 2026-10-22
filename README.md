@@ -1,4 +1,4 @@
-# 🍽️ E-Kantin Sekolah (`bi-kantin-web`)
+# 🍽️ BI-Kantin (`bi-kantin-web`)
 
 Sistem informasi dan pemesanan kantin sekolah berbasis web yang dibangun menggunakan **Laravel 11** dan **Bootstrap 5**. Aplikasi ini mempermudah siswa dalam memesan makanan/minuman secara efisien serta membantu pengelola kantin dalam memantau dan memperbarui status pesanan secara *real-time*.
 

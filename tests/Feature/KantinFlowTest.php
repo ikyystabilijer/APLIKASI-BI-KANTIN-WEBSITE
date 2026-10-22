@@ -27,7 +27,7 @@ class KantinFlowTest extends TestCase
 
         $response = $this->get('/login');
         $response->assertStatus(200);
-        $response->assertSee('E-Kantin');
+        $response->assertSee('BI-Kantin');
     }
 
     public function test_admin_login_and_dashboard_access(): void
