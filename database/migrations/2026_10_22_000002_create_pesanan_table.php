@@ -19,6 +19,7 @@ return new class extends Migration
                 $table->integer('jumlah');
                 $table->integer('total_harga');
                 $table->string('status', 100)->default('Menunggu Konfirmasi');
+                $table->timestamps();
             });
         }
     }

@@ -22,6 +22,23 @@
             font-weight: 600;
             background-color: #f1f5f9;
         }
+        .menu-thumb {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+        .menu-thumb-placeholder {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.5rem;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 1.25rem;
+        }
     </style>
 </head>
 <body>
@@ -73,10 +90,10 @@
         </div>
     @endif
 
-    <!-- Statistic Cards -->
+    <!-- Statistic Cards (Termasuk Ringkasan Hari Ini - Catatan No. 12) -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card p-3 bg-white border-start border-primary border-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card p-3 bg-white border-start border-primary border-4 h-100">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-muted small fw-semibold">TOTAL MENU</div>
@@ -86,8 +103,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card p-3 bg-white border-start border-warning border-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card p-3 bg-white border-start border-warning border-4 h-100">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-muted small fw-semibold">MENUNGGU KONFIRMASI</div>
@@ -97,11 +114,23 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card p-3 bg-white border-start border-success border-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card p-3 bg-white border-start border-info border-4 h-100">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small fw-semibold">TOTAL PESANAN</div>
+                        <div class="text-muted small fw-semibold">PESANAN HARI INI</div>
+                        <h3 class="fw-bold mb-0 text-info">{{ $pesananHariIni }}</h3>
+                        <small class="text-muted">Total: Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}</small>
+                    </div>
+                    <i class="bi bi-calendar-check display-6 text-info opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card p-3 bg-white border-start border-success border-4 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small fw-semibold">TOTAL SELURUH PESANAN</div>
                         <h3 class="fw-bold mb-0 text-success">{{ $totalPesanan }}</h3>
                     </div>
                     <i class="bi bi-receipt display-6 text-success opacity-50"></i>
@@ -124,6 +153,7 @@
                     <thead>
                         <tr>
                             <th class="ps-3">ID</th>
+                            <th>Waktu</th>
                             <th>Nama Siswa</th>
                             <th>Menu</th>
                             <th>Jumlah</th>
@@ -136,6 +166,9 @@
                         @forelse($pesanans as $p)
                             <tr>
                                 <td class="ps-3 fw-bold">#{{ $p->id }}</td>
+                                <td class="text-muted small">
+                                    {{ $p->created_at ? $p->created_at->format('d/m H:i') : '-' }}
+                                </td>
                                 <td>
                                     <span class="badge bg-light text-dark border">
                                         <i class="bi bi-person me-1"></i>{{ $p->user->username ?? 'User #' . $p->user_id }}
@@ -176,7 +209,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">
+                                <td colspan="8" class="text-center py-4 text-muted">
                                     <i class="bi bi-inbox display-6 d-block mb-2"></i>
                                     Belum ada pesanan masuk.
                                 </td>
@@ -188,7 +221,7 @@
         </div>
     </div>
 
-    <!-- Section: CRUD Menu Makanan & Minuman -->
+    <!-- Section: CRUD Menu Makanan & Minuman (Dengan Upload Gambar - Catatan No. 9) -->
     <div class="card">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0 fw-bold text-dark">
@@ -204,6 +237,7 @@
                     <thead>
                         <tr>
                             <th class="ps-3" style="width: 50px;">No</th>
+                            <th style="width: 70px;">Gambar</th>
                             <th>Nama Menu</th>
                             <th>Kategori</th>
                             <th>Harga</th>
@@ -214,6 +248,15 @@
                         @forelse($menus as $index => $m)
                             <tr>
                                 <td class="ps-3">{{ $index + 1 }}</td>
+                                <td>
+                                    @if($m->gambar)
+                                        <img src="{{ asset('storage/' . $m->gambar) }}" alt="{{ $m->nama_menu }}" class="menu-thumb">
+                                    @else
+                                        <div class="menu-thumb-placeholder">
+                                            <i class="bi bi-image"></i>
+                                        </div>
+                                    @endif
+                                </td>
                                 <td class="fw-semibold">{{ $m->nama_menu }}</td>
                                 <td>
                                     <span class="badge bg-light text-secondary border">{{ $m->kategori }}</span>
@@ -237,7 +280,7 @@
                             <div class="modal fade" id="modalEditMenu{{ $m->id }}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
-                                        <form action="{{ route('admin.menu.update', $m->id) }}" method="POST">
+                                        <form action="{{ route('admin.menu.update', $m->id) }}" method="POST" enctype="multipart/form-data">
                                             @csrf
                                             @method('PUT')
                                             <div class="modal-header">
@@ -262,6 +305,17 @@
                                                     <label class="form-label fw-semibold">Harga (Rp)</label>
                                                     <input type="number" name="harga" class="form-control" value="{{ $m->harga }}" min="0" required>
                                                 </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Upload Gambar Baru (Opsional)</label>
+                                                    @if($m->gambar)
+                                                        <div class="mb-2">
+                                                            <small class="text-muted d-block">Gambar saat ini:</small>
+                                                            <img src="{{ asset('storage/' . $m->gambar) }}" alt="{{ $m->nama_menu }}" class="menu-thumb">
+                                                        </div>
+                                                    @endif
+                                                    <input type="file" name="gambar" class="form-control" accept="image/*">
+                                                    <small class="text-muted">Format: JPG, PNG, WEBP (Maks: 2MB)</small>
+                                                </div>
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -273,7 +327,7 @@
                             </div>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">Belum ada data menu.</td>
+                                <td colspan="6" class="text-center py-4 text-muted">Belum ada data menu.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -283,11 +337,11 @@
     </div>
 </div>
 
-<!-- Modal Tambah Menu -->
+<!-- Modal Tambah Menu (Dengan Upload Gambar) -->
 <div class="modal fade" id="modalTambahMenu" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="{{ route('admin.menu.store') }}" method="POST">
+            <form action="{{ route('admin.menu.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">Tambah Menu Baru</h5>
@@ -310,6 +364,11 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Harga (Rp)</label>
                         <input type="number" name="harga" class="form-control" placeholder="Contoh: 12000" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Upload Gambar (Opsional)</label>
+                        <input type="file" name="gambar" class="form-control" accept="image/*">
+                        <small class="text-muted">Format: JPG, PNG, WEBP (Maks: 2MB)</small>
                     </div>
                 </div>
                 <div class="modal-footer">

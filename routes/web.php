@@ -34,7 +34,15 @@ Route::prefix('siswa')->middleware('role:siswa')->group(function () {
     Route::get('/', [SiswaController::class, 'index'])->name('siswa.dashboard');
     Route::get('/dashboard', [SiswaController::class, 'index']);
 
-    // Proses Pemesanan
+    // Keranjang Belanja Berbasis Session (Catatan Guru No. 10)
+    Route::post('/keranjang', [SiswaController::class, 'tambahKeranjang'])->name('siswa.cart.add');
+    Route::delete('/keranjang/{id}', [SiswaController::class, 'hapusKeranjang'])->name('siswa.cart.remove');
+    Route::post('/keranjang/kosongkan', [SiswaController::class, 'kosongkanKeranjang'])->name('siswa.cart.clear');
+
+    // Checkout Keranjang dengan DB Transaction (Catatan Guru No. 11)
+    Route::post('/checkout', [SiswaController::class, 'checkoutKeranjang'])->name('siswa.cart.checkout');
+
+    // Proses Pemesanan Langsung
     Route::post('/pesan', [SiswaController::class, 'pesan'])->name('siswa.pesan');
 
     // Cek Status Pesanan Real-time (JSON API)

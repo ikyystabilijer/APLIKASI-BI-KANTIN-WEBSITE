@@ -8,12 +8,13 @@ Sistem informasi dan pemesanan kantin sekolah berbasis web yang dibangun menggun
 
 - 🔐 **Autentikasi & Multi-Role**: Sistem login role-based untuk **Admin** dan **Siswa**.
 - 👨‍🍳 **Panel Admin**:
-  - Ringkasan statistik (Total Menu, Pesanan Menunggu Konfirmasi, Total Pesanan).
-  - Manajemen Menu Makanan & Minuman (Tambah, Edit, Hapus / CRUD).
-  - Monitoring pesanan masuk dengan fitur pengubahan status secara instan (*Menunggu Konfirmasi*, *Sedang Diproses*, *Siap Diambil*, *Selesai*, *Dibatalkan*).
+  - Ringkasan statistik (Total Menu, Pesanan Menunggu Konfirmasi, Pesanan Masuk Hari Ini, Total Pesanan).
+  - Manajemen Menu Makanan & Minuman (Tambah, Edit, Hapus / CRUD) dilengkapi validasi **Upload Gambar Menu**.
+  - Monitoring pesanan masuk dengan pencatatan waktu otomatis dan pengubahan status secara instan (*Menunggu Konfirmasi*, *Sedang Diproses*, *Siap Diambil*, *Selesai*, *Dibatalkan*).
 - 🧑‍🎓 **Panel Siswa**:
-  - Katalog menu makanan dan minuman responsif.
-  - Form pemesanan dengan penentuan jumlah porsi (*qty*) dan kalkulasi otomatis total harga.
+  - Katalog makanan & minuman dengan gambar visual menarik.
+  - **Keranjang Belanja (Session Storage)**: Siswa dapat menambahkan beberapa menu sekaligus ke keranjang belanja.
+  - **Checkout Aman (DB Transaction)**: Proses checkout multi-item terproteksi transaksi database untuk menjamin integritas data.
   - Monitoring status pesanan secara **real-time** (auto-refresh tanpa perlu reload halaman penuh).
 
 ---
@@ -106,7 +107,15 @@ php artisan migrate --seed
 
 ---
 
-### 7. Jalankan Server Development
+### 7. Buat Symlink Storage (Untuk Gambar Menu)
+Hubungkan folder penyimpanan file gambar agar bisa diakses di web browser:
+```bash
+php artisan storage:link
+```
+
+---
+
+### 8. Jalankan Server Development
 Jalankan web server lokal Laravel:
 ```bash
 php artisan serve
@@ -142,6 +151,8 @@ Database `db_bikantin` terdiri dari 3 tabel utama:
    - `nama_menu` (VARCHAR 100)
    - `harga` (INT)
    - `kategori` (VARCHAR 50: Makanan, Minuman, Camilan, dll.)
+   - `gambar` (VARCHAR 255, Path foto file - Nullable)
+   - `created_at` & `updated_at` (Timestamps)
 3. **`pesanan`**
    - `id` (Primary Key, Auto Increment)
    - `user_id` (Foreign Key -> `users.id`)
@@ -149,6 +160,7 @@ Database `db_bikantin` terdiri dari 3 tabel utama:
    - `jumlah` (INT)
    - `total_harga` (INT)
    - `status` (VARCHAR 100, default `'Menunggu Konfirmasi'`)
+   - `created_at` & `updated_at` (Timestamps)
 
 ---
 
@@ -167,5 +179,7 @@ php artisan test
   - Pastikan `DB_USERNAME` dan `DB_PASSWORD` di file `.env` sudah sesuai dengan pengaturan MySQL Anda.
 - **Error: `Unknown database 'db_bikantin'`**
   - Buat terlebih dahulu database `db_bikantin` di phpMyAdmin sebelum menjalankan `php artisan migrate`.
+- **Gambar menu tidak muncul:**
+  - Pastikan telah menjalankan `php artisan storage:link` agar folder upload dapat diakses secara publik.
 - **Tampilan CSS/Icons tidak muncul:**
   - Aplikasi menggunakan CDN Bootstrap 5 dan Bootstrap Icons. Pastikan komputer Anda terhubung ke internet saat pertama kali mengakses aplikasi.

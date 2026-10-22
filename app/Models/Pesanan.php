@@ -11,8 +11,6 @@ class Pesanan extends Model
 
     protected $table = 'pesanan';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'user_id',
         'menu_id',
