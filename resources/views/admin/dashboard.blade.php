@@ -221,6 +221,45 @@
         </div>
     </div>
 
+    <!-- Section: CRUD Akun Pengguna -->
+    <div class="card mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-primary me-2"></i>Manajemen Akun</h5>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahUser"><i class="bi bi-person-plus me-1"></i>Tambah Akun</button>
+        </div>
+        <div class="card-body border-bottom">
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="row g-2">
+                <div class="col-md-6"><input type="search" name="search" class="form-control" value="{{ request('search') }}" placeholder="Cari username"></div>
+                <div class="col-md-4"><select name="role" class="form-select"><option value="">Semua Role</option><option value="admin" @selected(request('role') === 'admin')>Admin</option><option value="siswa" @selected(request('role') === 'siswa')>Siswa</option><option value="kasir" @selected(request('role') === 'kasir')>Kasir</option></select></div>
+                <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filter</button></div>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th class="ps-3">Username</th><th>Email</th><th>Role</th><th>Status</th><th class="text-end pe-3">Aksi</th></tr></thead>
+                <tbody>
+                @forelse($users as $user)
+                    <tr>
+                        <td class="ps-3 fw-semibold">{{ $user->username }}</td><td>{{ $user->email ?: '-' }}</td>
+                        <td><span class="badge bg-secondary">{{ ucfirst($user->role) }}</span></td>
+                        <td><span class="badge {{ $user->status ? 'bg-success' : 'bg-danger' }}">{{ $user->status ? 'Aktif' : 'Nonaktif' }}</span></td>
+                        <td class="text-end pe-3">
+                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditUser{{ $user->id }}" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                            @if($user->id !== auth()->id())
+                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus akun ini?')">@csrf @method('DELETE')<button class="btn btn-danger btn-sm" title="Hapus"><i class="bi bi-trash"></i></button></form>
+                            @endif
+                        </td>
+                    </tr>
+                    <div class="modal fade" id="modalEditUser{{ $user->id }}" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form action="{{ route('admin.users.update', $user) }}" method="POST">@csrf @method('PUT')<div class="modal-header"><h5 class="modal-title">Edit Akun</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input name="username" class="form-control mb-2" value="{{ $user->username }}" required><input name="email" type="email" class="form-control mb-2" value="{{ $user->email }}" placeholder="Email"><input name="password" type="password" class="form-control mb-2" placeholder="Password baru (opsional)"><select name="role" class="form-select mb-2"><option value="admin" @selected($user->role === 'admin')>Admin</option><option value="siswa" @selected($user->role === 'siswa')>Siswa</option><option value="kasir" @selected($user->role === 'kasir')>Kasir</option></select><select name="status" class="form-select"><option value="1" @selected($user->status)>Aktif</option><option value="0" @selected(!$user->status)>Nonaktif</option></select></div><div class="modal-footer"><button class="btn btn-primary">Simpan</button></div></form></div></div></div>
+                @empty
+                    <tr><td colspan="5" class="text-center text-muted py-4">Belum ada akun.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white">{{ $users->links() }}</div>
+    </div>
+
     <!-- Section: CRUD Menu Makanan & Minuman (Dengan Upload Gambar - Catatan No. 9) -->
     <div class="card">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
@@ -336,6 +375,8 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="modalTambahUser" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form action="{{ route('admin.users.store') }}" method="POST">@csrf<div class="modal-header"><h5 class="modal-title">Tambah Akun</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input name="username" class="form-control mb-2" placeholder="Username" required><input name="email" type="email" class="form-control mb-2" placeholder="Email (opsional)"><input name="password" type="password" class="form-control mb-2" placeholder="Password" required><select name="role" class="form-select"><option value="siswa">Siswa</option><option value="kasir">Kasir</option><option value="admin">Admin</option></select></div><div class="modal-footer"><button class="btn btn-primary">Tambah Akun</button></div></form></div></div></div>
 
 <!-- Modal Tambah Menu (Dengan Upload Gambar) -->
 <div class="modal fade" id="modalTambahMenu" tabindex="-1" aria-hidden="true">

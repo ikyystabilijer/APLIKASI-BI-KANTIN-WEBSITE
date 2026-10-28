@@ -14,7 +14,7 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         if (session()->has('role')) {
-            if (session('role') === 'admin') {
+            if (in_array(session('role'), ['admin', 'kasir'], true)) {
                 return redirect()->route('admin.dashboard');
             } elseif (session('role') === 'siswa') {
                 return redirect()->route('siswa.dashboard');
@@ -37,11 +37,9 @@ class AuthController extends Controller
             'password.required' => 'Password wajib diisi!',
         ]);
 
-        $user = User::where('username', $request->username)
-            ->where('password', $request->password)
-            ->first();
+        $user = User::where('username', $request->username)->first();
 
-        if (! $user) {
+        if (! $user || ! $user->status || $user->password !== $request->password) {
             return back()->withInput()->with('error', 'Username atau password tidak cocok!');
         }
 
@@ -56,8 +54,10 @@ class AuthController extends Controller
 
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard')->with('success', 'Selamat datang Admin!');
+        } elseif ($user->role === 'kasir') {
+            return redirect()->route('kasir.dashboard')->with('success', 'Selamat datang Kasir!');
         } else {
-            return redirect()->route('siswa.dashboard')->with('success', 'Selamat datang, ' . $user->username . '!');
+            return redirect()->route('siswa.dashboard')->with('success', 'Selamat datang, '.$user->username.'!');
         }
     }
 

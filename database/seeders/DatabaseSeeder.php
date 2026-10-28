@@ -14,14 +14,19 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Seeder Akun Users
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['username' => 'admin_kantin'],
-            ['password' => 'admin123', 'role' => 'admin']
+            ['password' => 'admin123', 'role' => 'admin', 'status' => true]
         );
 
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['username' => 'budi_siswa'],
-            ['password' => '123', 'role' => 'siswa']
+            ['password' => '123', 'role' => 'siswa', 'status' => true]
+        );
+
+        User::updateOrCreate(
+            ['username' => 'Kasir_kantin'],
+            ['password' => 'kasir123', 'role' => 'kasir', 'status' => true]
         );
 
         // Seeder Menu Awal

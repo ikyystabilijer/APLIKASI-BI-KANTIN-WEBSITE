@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\KasirController;
 use App\Http\Controllers\SiswaController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,8 +26,18 @@ Route::prefix('admin')->middleware('role:admin')->group(function () {
     Route::put('/menu/{id}', [AdminController::class, 'updateMenu'])->name('admin.menu.update');
     Route::delete('/menu/{id}', [AdminController::class, 'destroyMenu'])->name('admin.menu.destroy');
 
+    // CRUD akun pengguna
+    Route::post('/users', [AdminController::class, 'storeUser'])->name('admin.users.store');
+    Route::put('/users/{user}', [AdminController::class, 'updateUser'])->name('admin.users.update');
+    Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('admin.users.destroy');
+
     // Pengelolaan Status Pesanan
     Route::put('/pesanan/{id}/status', [AdminController::class, 'updateStatusPesanan'])->name('admin.pesanan.status');
+});
+
+Route::prefix('kasir')->middleware('role:kasir')->group(function () {
+    Route::get('/', [KasirController::class, 'index'])->name('kasir.dashboard');
+    Route::put('/pesanan/{id}/status', [KasirController::class, 'updateStatus'])->name('kasir.pesanan.status');
 });
 
 // Rute Halaman Siswa

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Menu;
 use App\Models\Pesanan;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -16,6 +17,12 @@ class AdminController extends Controller
     {
         $menus = Menu::orderBy('id', 'desc')->get();
         $pesanans = Pesanan::with(['user', 'menu'])->orderBy('id', 'desc')->get();
+        $users = User::query()
+            ->when(request('search'), fn ($query, $search) => $query->where('username', 'like', '%'.$search.'%'))
+            ->when(request('role'), fn ($query, $role) => $query->where('role', $role))
+            ->orderBy('id', 'desc')
+            ->paginate(10, ['*'], 'users_page')
+            ->withQueryString();
 
         $totalMenu = $menus->count();
         $totalPesanan = $pesanans->count();
@@ -34,8 +41,54 @@ class AdminController extends Controller
             'totalPesanan',
             'pesananMenunggu',
             'pesananHariIni',
-            'pendapatanHariIni'
+            'pendapatanHariIni', 'users'
         ));
+    }
+
+    public function storeUser(Request $request)
+    {
+        $validated = $request->validate([
+            'username' => 'required|string|max:50|unique:users,username',
+            'email' => 'nullable|email|max:255|unique:users,email',
+            'password' => 'required|string|min:6',
+            'role' => 'required|in:admin,siswa,kasir',
+        ]);
+
+        User::create($validated + ['status' => true]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Akun berhasil ditambahkan.');
+    }
+
+    public function updateUser(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'username' => 'required|string|max:50|unique:users,username,'.$user->id,
+            'email' => 'nullable|email|max:255|unique:users,email,'.$user->id,
+            'password' => 'nullable|string|min:6',
+            'role' => 'required|in:admin,siswa,kasir',
+            'status' => 'required|boolean',
+        ]);
+
+        if (! empty($validated['password'])) {
+            $user->password = $validated['password'];
+        }
+
+        unset($validated['password']);
+
+        $user->update($validated);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Akun berhasil diperbarui.');
+    }
+
+    public function destroyUser(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Akun admin yang sedang digunakan tidak dapat dihapus.');
+        }
+
+        $user->delete();
+
+        return redirect()->route('admin.dashboard')->with('success', 'Akun berhasil dihapus.');
     }
 
     /**
@@ -45,23 +98,23 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'nama_menu' => 'required|string|max:100',
-            'harga'     => 'required|numeric|min:0',
-            'kategori'  => 'required|string|max:50',
-            'gambar'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'harga' => 'required|numeric|min:0',
+            'kategori' => 'required|string|max:50',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
             'nama_menu.required' => 'Nama menu wajib diisi!',
-            'harga.required'     => 'Harga wajib diisi!',
-            'harga.numeric'      => 'Harga harus berupa angka!',
-            'kategori.required'  => 'Kategori wajib diisi!',
-            'gambar.image'       => 'File yang diunggah harus berupa gambar!',
-            'gambar.mimes'       => 'Format gambar harus jpeg, png, jpg, atau webp!',
-            'gambar.max'         => 'Ukuran gambar maksimal 2MB!',
+            'harga.required' => 'Harga wajib diisi!',
+            'harga.numeric' => 'Harga harus berupa angka!',
+            'kategori.required' => 'Kategori wajib diisi!',
+            'gambar.image' => 'File yang diunggah harus berupa gambar!',
+            'gambar.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp!',
+            'gambar.max' => 'Ukuran gambar maksimal 2MB!',
         ]);
 
         $data = [
             'nama_menu' => $validated['nama_menu'],
-            'harga'     => $validated['harga'],
-            'kategori'  => $validated['kategori'],
+            'harga' => $validated['harga'],
+            'kategori' => $validated['kategori'],
         ];
 
         if ($request->hasFile('gambar')) {
@@ -80,24 +133,24 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'nama_menu' => 'required|string|max:100',
-            'harga'     => 'required|numeric|min:0',
-            'kategori'  => 'required|string|max:50',
-            'gambar'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'harga' => 'required|numeric|min:0',
+            'kategori' => 'required|string|max:50',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
             'nama_menu.required' => 'Nama menu wajib diisi!',
-            'harga.required'     => 'Harga wajib diisi!',
-            'harga.numeric'      => 'Harga harus berupa angka!',
-            'kategori.required'  => 'Kategori wajib diisi!',
-            'gambar.image'       => 'File yang diunggah harus berupa gambar!',
-            'gambar.mimes'       => 'Format gambar harus jpeg, png, jpg, atau webp!',
-            'gambar.max'         => 'Ukuran gambar maksimal 2MB!',
+            'harga.required' => 'Harga wajib diisi!',
+            'harga.numeric' => 'Harga harus berupa angka!',
+            'kategori.required' => 'Kategori wajib diisi!',
+            'gambar.image' => 'File yang diunggah harus berupa gambar!',
+            'gambar.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp!',
+            'gambar.max' => 'Ukuran gambar maksimal 2MB!',
         ]);
 
         $menu = Menu::findOrFail($id);
         $data = [
             'nama_menu' => $validated['nama_menu'],
-            'harga'     => $validated['harga'],
-            'kategori'  => $validated['kategori'],
+            'harga' => $validated['harga'],
+            'kategori' => $validated['kategori'],
         ];
 
         if ($request->hasFile('gambar')) {
@@ -144,6 +197,6 @@ class AdminController extends Controller
             'status' => $request->status,
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Status pesanan #' . $pesanan->id . ' berhasil diperbarui!');
+        return redirect()->route('admin.dashboard')->with('success', 'Status pesanan #'.$pesanan->id.' berhasil diperbarui!');
     }
 }
