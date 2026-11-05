@@ -190,12 +190,19 @@ class AdminController extends Controller
     {
         $request->validate([
             'status' => 'required|string|max:100',
+            'status_pembayaran' => 'nullable|string|max:50',
         ]);
 
         $pesanan = Pesanan::findOrFail($id);
-        $pesanan->update([
+        $updateData = [
             'status' => $request->status,
-        ]);
+        ];
+
+        if ($request->filled('status_pembayaran')) {
+            $updateData['status_pembayaran'] = $request->status_pembayaran;
+        }
+
+        $pesanan->update($updateData);
 
         return redirect()->route('admin.dashboard')->with('success', 'Status pesanan #'.$pesanan->id.' berhasil diperbarui!');
     }

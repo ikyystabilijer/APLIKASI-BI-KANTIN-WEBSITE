@@ -40,7 +40,7 @@ class SiswaController extends Controller
     {
         $request->validate([
             'menu_id' => 'required|exists:menu,id',
-            'jumlah'  => 'required|integer|min:1',
+            'jumlah' => 'required|integer|min:1',
         ]);
 
         $menu = Menu::findOrFail($request->menu_id);
@@ -51,19 +51,19 @@ class SiswaController extends Controller
             $cart[$menu->id]['subtotal'] = $cart[$menu->id]['jumlah'] * $menu->harga;
         } else {
             $cart[$menu->id] = [
-                'menu_id'   => $menu->id,
+                'menu_id' => $menu->id,
                 'nama_menu' => $menu->nama_menu,
-                'harga'     => $menu->harga,
-                'jumlah'    => (int) $request->jumlah,
-                'subtotal'  => $menu->harga * (int) $request->jumlah,
-                'gambar'    => $menu->gambar,
-                'kategori'  => $menu->kategori,
+                'harga' => $menu->harga,
+                'jumlah' => (int) $request->jumlah,
+                'subtotal' => $menu->harga * (int) $request->jumlah,
+                'gambar' => $menu->gambar,
+                'kategori' => $menu->kategori,
             ];
         }
 
         session()->put('cart', $cart);
 
-        return redirect()->route('siswa.dashboard')->with('success', '✅ ' . $menu->nama_menu . ' berhasil ditambahkan ke keranjang!');
+        return redirect()->route('siswa.dashboard')->with('success', '✅ '.$menu->nama_menu.' berhasil ditambahkan ke keranjang!');
     }
 
     /**
@@ -77,7 +77,8 @@ class SiswaController extends Controller
             $namaMenu = $cart[$menuId]['nama_menu'];
             unset($cart[$menuId]);
             session()->put('cart', $cart);
-            return redirect()->route('siswa.dashboard')->with('success', '🗑️ ' . $namaMenu . ' dihapus dari keranjang.');
+
+            return redirect()->route('siswa.dashboard')->with('success', '🗑️ '.$namaMenu.' dihapus dari keranjang.');
         }
 
         return redirect()->route('siswa.dashboard');
@@ -89,14 +90,21 @@ class SiswaController extends Controller
     public function kosongkanKeranjang()
     {
         session()->forget('cart');
+
         return redirect()->route('siswa.dashboard')->with('success', 'Keranjang belanja telah dikosongkan.');
     }
 
     /**
      * Melakukan checkout keranjang belanja menggunakan DB Transaction (Catatan Guru No. 11)
      */
-    public function checkoutKeranjang()
+    public function checkoutKeranjang(Request $request)
     {
+        $request->validate([
+            'metode_pembayaran' => 'nullable|string|in:Cash,QRIS,cash,qris',
+        ]);
+
+        $metode = strtoupper($request->input('metode_pembayaran', 'Cash')) === 'QRIS' ? 'QRIS' : 'Cash';
+
         $cart = session()->get('cart', []);
 
         if (empty($cart)) {
@@ -106,14 +114,16 @@ class SiswaController extends Controller
         $userId = session('user_id') ?? Auth::id();
 
         // Menggunakan DB Transaction saat checkout pesanan
-        DB::transaction(function () use ($cart, $userId) {
+        DB::transaction(function () use ($cart, $userId, $metode) {
             foreach ($cart as $item) {
                 Pesanan::create([
-                    'user_id'     => $userId,
-                    'menu_id'     => $item['menu_id'],
-                    'jumlah'      => $item['jumlah'],
+                    'user_id' => $userId,
+                    'menu_id' => $item['menu_id'],
+                    'jumlah' => $item['jumlah'],
                     'total_harga' => $item['subtotal'],
-                    'status'      => 'Menunggu Konfirmasi',
+                    'metode_pembayaran' => $metode,
+                    'status_pembayaran' => 'Belum Dibayar',
+                    'status' => 'Menunggu Konfirmasi',
                 ]);
             }
 
@@ -121,7 +131,11 @@ class SiswaController extends Controller
             session()->forget('cart');
         });
 
-        return redirect()->route('siswa.dashboard')->with('success', '🎉 Checkout berhasil! Pesanan Anda telah dikirim ke kantin.');
+        $pesanSukses = $metode === 'QRIS'
+            ? '🎉 Checkout berhasil dengan metode QRIS! Silakan scan kode QRIS dan tunjukkan ke kasir untuk validasi.'
+            : '🎉 Checkout berhasil dengan metode Cash! Silakan lakukan pembayaran tunai di kasir kantin.';
+
+        return redirect()->route('siswa.dashboard')->with('success', $pesanSukses);
     }
 
     /**
@@ -131,30 +145,35 @@ class SiswaController extends Controller
     {
         $request->validate([
             'menu_id' => 'required|exists:menu,id',
-            'jumlah'  => 'required|integer|min:1',
+            'jumlah' => 'required|integer|min:1',
+            'metode_pembayaran' => 'nullable|string|in:Cash,QRIS,cash,qris',
         ], [
             'menu_id.required' => 'Silakan pilih menu terlebih dahulu!',
-            'menu_id.exists'   => 'Menu yang dipilih tidak valid!',
-            'jumlah.required'  => 'Jumlah pesanan wajib diisi!',
-            'jumlah.min'       => 'Jumlah pesanan minimal 1!',
+            'menu_id.exists' => 'Menu yang dipilih tidak valid!',
+            'jumlah.required' => 'Jumlah pesanan wajib diisi!',
+            'jumlah.min' => 'Jumlah pesanan minimal 1!',
         ]);
+
+        $metode = strtoupper($request->input('metode_pembayaran', 'Cash')) === 'QRIS' ? 'QRIS' : 'Cash';
 
         $userId = session('user_id') ?? Auth::id();
         $menu = Menu::findOrFail($request->menu_id);
         $totalHarga = $menu->harga * $request->jumlah;
 
         // DB Transaction untuk menjamin integritas data (Catatan Guru No. 11)
-        DB::transaction(function () use ($userId, $menu, $request, $totalHarga) {
+        DB::transaction(function () use ($userId, $menu, $request, $totalHarga, $metode) {
             Pesanan::create([
-                'user_id'     => $userId,
-                'menu_id'     => $menu->id,
-                'jumlah'      => $request->jumlah,
+                'user_id' => $userId,
+                'menu_id' => $menu->id,
+                'jumlah' => $request->jumlah,
                 'total_harga' => $totalHarga,
-                'status'      => 'Menunggu Konfirmasi',
+                'metode_pembayaran' => $metode,
+                'status_pembayaran' => 'Belum Dibayar',
+                'status' => 'Menunggu Konfirmasi',
             ]);
         });
 
-        return redirect()->route('siswa.dashboard')->with('success', 'Pesanan ' . $menu->nama_menu . ' (' . $request->jumlah . 'x) berhasil dipesan! Mohon tunggu konfirmasi kantin.');
+        return redirect()->route('siswa.dashboard')->with('success', 'Pesanan '.$menu->nama_menu.' ('.$request->jumlah.'x) berhasil dipesan ('.$metode.')! Mohon tunggu konfirmasi kantin.');
     }
 
     /**

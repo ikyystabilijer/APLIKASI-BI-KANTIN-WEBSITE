@@ -38,6 +38,7 @@ Route::prefix('admin')->middleware('role:admin')->group(function () {
 Route::prefix('kasir')->middleware('role:kasir')->group(function () {
     Route::get('/', [KasirController::class, 'index'])->name('kasir.dashboard');
     Route::put('/pesanan/{id}/status', [KasirController::class, 'updateStatus'])->name('kasir.pesanan.status');
+    Route::put('/pesanan/{id}/validasi', [KasirController::class, 'validasiPembayaran'])->name('kasir.pesanan.validasi');
 });
 
 // Rute Halaman Siswa

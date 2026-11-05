@@ -24,18 +24,28 @@
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
         .menu-img-container {
-            height: 140px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
             overflow: hidden;
-            border-radius: 0.5rem 0.5rem 0 0;
-            background: #e2e8f0;
+            border-radius: 0.75rem 0.75rem 0 0;
+            background: #f1f5f9;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
         .menu-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .menu-card:hover .menu-img {
+            transform: scale(1.04);
+        }
+        .menu-placeholder-icon {
+            font-size: 4rem;
+            opacity: 0.4;
         }
         .live-indicator {
             display: inline-block;
@@ -51,6 +61,28 @@
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
             70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .payment-card {
+            cursor: pointer;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+        }
+        .payment-card:hover {
+            border-color: #93c5fd;
+            background-color: #f8fafc;
+        }
+        .payment-card.selected {
+            border-color: #0d6efd;
+            background-color: #eff6ff;
+        }
+        .qris-box {
+            background: #ffffff;
+            border: 2px solid #dc3545;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            display: inline-block;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
         }
     </style>
 </head>
@@ -120,41 +152,38 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h4 class="fw-bold mb-1"><i class="bi bi-grid-fill text-primary me-2"></i>Katalog Menu Kantin</h4>
-                <p class="text-muted small mb-0">Pilih menu favoritmu, tambahkan ke keranjang atau langsung pesan.</p>
+                <p class="text-muted small mb-0">Pilih menu favoritmu, tambahkan ke keranjang, dan bayar lewat Cash atau QRIS.</p>
             </div>
             <span class="badge bg-primary px-3 py-2 fs-6">{{ count($menus) }} Menu</span>
         </div>
 
-        <div class="row g-3">
+        <div class="row g-4">
             @forelse($menus as $menu)
-                <div class="col-md-6 col-lg-4">
-                    <div class="card menu-card h-100 bg-white overflow-hidden">
-                        <!-- Gambar Menu -->
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="card menu-card h-100 bg-white overflow-hidden shadow-sm">
+                        <!-- Gambar Menu (Ukuran 1:1) -->
                         <div class="menu-img-container">
                             @if($menu->gambar)
                                 <img src="{{ asset('storage/' . $menu->gambar) }}" alt="{{ $menu->nama_menu }}" class="menu-img">
                             @else
                                 <div class="text-center text-muted">
                                     @if(stripos($menu->kategori, 'minum') !== false)
-                                        <i class="bi bi-cup-straw display-4 text-primary opacity-50"></i>
+                                        <i class="bi bi-cup-straw menu-placeholder-icon text-primary"></i>
                                     @else
-                                        <i class="bi bi-egg-fried display-4 text-warning opacity-50"></i>
+                                        <i class="bi bi-egg-fried menu-placeholder-icon text-warning"></i>
                                     @endif
                                 </div>
                             @endif
+                            <span class="position-absolute top-0 start-0 m-2 badge bg-dark bg-opacity-75">
+                                {{ $menu->kategori }}
+                            </span>
                         </div>
 
                         <div class="p-3 d-flex flex-column flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge bg-light text-secondary border">
-                                    {{ $menu->kategori }}
-                                </span>
-                                <span class="fw-bold text-success fs-5">
-                                    Rp {{ number_format($menu->harga, 0, ',', '.') }}
-                                </span>
+                            <h6 class="fw-bold text-dark mb-1 text-truncate" title="{{ $menu->nama_menu }}">{{ $menu->nama_menu }}</h6>
+                            <div class="fw-bold text-success fs-5 mb-3">
+                                Rp {{ number_format($menu->harga, 0, ',', '.') }}
                             </div>
-
-                            <h5 class="fw-bold mb-3 text-dark">{{ $menu->nama_menu }}</h5>
 
                             <div class="mt-auto pt-2 border-top">
                                 <!-- Form Tambah ke Keranjang Session (Catatan No. 10) -->
@@ -195,7 +224,7 @@
                     <i class="bi bi-clock-history text-primary me-2"></i>Status Pesanan Saya
                 </h5>
                 <small class="text-muted">
-                    <span class="live-indicator"></span> Real-time monitoring aktif (otomatis memperbarui status)
+                    <span class="live-indicator"></span> Real-time monitoring aktif (otomatis memperbarui status pesanan & validasi pembayaran)
                 </small>
             </div>
             <button id="btnManualRefresh" class="btn btn-sm btn-outline-secondary">
@@ -211,8 +240,11 @@
                             <th>Waktu</th>
                             <th>Menu</th>
                             <th>Jumlah</th>
-                            <th>Total Harga</th>
-                            <th class="pe-3">Status Pesanan</th>
+                            <th>Total</th>
+                            <th>Metode Bayar</th>
+                            <th>Status Pembayaran</th>
+                            <th>Status Pesanan</th>
+                            <th class="pe-3 text-end" style="width: 110px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="pesananTableBody">
@@ -225,7 +257,21 @@
                                 <td class="fw-semibold">{{ $p->menu->nama_menu ?? 'Menu Dihapus' }}</td>
                                 <td>{{ $p->jumlah }} porsi</td>
                                 <td class="text-success fw-bold">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</td>
-                                <td class="pe-3">
+                                <td>
+                                    @if(strtoupper($p->metode_pembayaran) === 'QRIS')
+                                        <span class="badge bg-danger text-white"><i class="bi bi-qr-code me-1"></i> QRIS</span>
+                                    @else
+                                        <span class="badge bg-secondary text-white"><i class="bi bi-cash me-1"></i> Cash</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($p->status_pembayaran === 'Sudah Dibayar')
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Sudah Dibayar</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Belum Dibayar</span>
+                                    @endif
+                                </td>
+                                <td>
                                     @php
                                         $badgeClass = match($p->status) {
                                             'Menunggu Konfirmasi' => 'bg-warning text-dark',
@@ -240,10 +286,19 @@
                                         {{ $p->status }}
                                     </span>
                                 </td>
+                                <td class="pe-3 text-end">
+                                    @if(strtoupper($p->metode_pembayaran) === 'QRIS')
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="showQrisModal('{{ $p->id }}', '{{ $p->total_harga }}', '{{ $p->menu->nama_menu ?? 'Pesanan' }}')">
+                                            <i class="bi bi-qr-code-scan me-1"></i> QRIS
+                                        </button>
+                                    @else
+                                        <span class="text-muted small">-</span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr id="emptyRow">
-                                <td colspan="6" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted">
                                     <i class="bi bi-receipt display-6 d-block mb-2"></i>
                                     Kamu belum memiliki riwayat pesanan.
                                 </td>
@@ -256,7 +311,7 @@
     </div>
 </div>
 
-<!-- Modal Keranjang Belanja (Catatan Guru No. 10 & 11) -->
+<!-- Modal Keranjang Belanja & Opsi Pembayaran (Catatan Guru No. 10 & 11) -->
 <div class="modal fade" id="modalKeranjang" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -306,6 +361,123 @@
                             </tfoot>
                         </table>
                     </div>
+
+                    <!-- Form Opsi Pembayaran (Cash / QRIS) -->
+                    <form id="formCheckout" action="{{ route('siswa.cart.checkout') }}" method="POST">
+                        @csrf
+                        <div class="p-4 bg-light border-top">
+                            <label class="form-label fw-bold mb-3 d-flex align-items-center">
+                                <i class="bi bi-credit-card-2-front-fill text-primary me-2 fs-5"></i>
+                                Pilih Metode Pembayaran
+                            </label>
+
+                            <div class="row g-3 mb-3">
+                                <!-- Opsi Cash -->
+                                <div class="col-sm-6">
+                                    <div class="payment-card p-3 h-100 selected" id="cardOptionCash" onclick="selectPaymentMethod('Cash')">
+                                        <div class="form-check d-flex align-items-start">
+                                            <input class="form-check-input me-2 mt-1" type="radio" name="metode_pembayaran" id="radioPaymentCash" value="Cash" checked>
+                                            <label class="form-check-label w-100" for="radioPaymentCash" style="cursor: pointer;">
+                                                <div class="fw-bold text-dark fs-6 d-flex align-items-center">
+                                                    <i class="bi bi-cash-stack text-success fs-4 me-2"></i> Cash (Tunai)
+                                                </div>
+                                                <small class="text-muted d-block mt-1">
+                                                    Bayar langsung di kasir kantin saat mengambil makanan.
+                                                </small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Opsi QRIS -->
+                                <div class="col-sm-6">
+                                    <div class="payment-card p-3 h-100" id="cardOptionQris" onclick="selectPaymentMethod('QRIS')">
+                                        <div class="form-check d-flex align-items-start">
+                                            <input class="form-check-input me-2 mt-1" type="radio" name="metode_pembayaran" id="radioPaymentQris" value="QRIS">
+                                            <label class="form-check-label w-100" for="radioPaymentQris" style="cursor: pointer;">
+                                                <div class="fw-bold text-dark fs-6 d-flex align-items-center">
+                                                    <i class="bi bi-qr-code-scan text-danger fs-4 me-2"></i> QRIS
+                                                </div>
+                                                <small class="text-muted d-block mt-1">
+                                                    Scan barcode QRIS via GoPay, OVO, Dana, ShopeePay, atau Mobile Banking.
+                                                </small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Petunjuk / Preview Box QRIS -->
+                            <div id="qrisPreviewContainer" class="d-none text-center pt-2">
+                                <div class="alert alert-info small text-start py-2 px-3 mb-3">
+                                    <i class="bi bi-info-circle-fill me-1"></i>
+                                    <strong>Petunjuk Pembayaran QRIS:</strong> Silakan scan QRIS di bawah ini melalui aplikasi e-wallet Anda sejumlah nominal belanja, lalu klik checkout dan tunjukkan bukti pembayaran ke kasir kantin.
+                                </div>
+
+                                <div class="qris-box text-center">
+                                    <!-- Header QRIS -->
+                                    <div class="bg-danger text-white py-1 px-3 rounded-2 fw-bold d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="bi bi-qr-code"></i> QRIS</span>
+                                        <span style="font-size: 0.7rem; letter-spacing: 1px;">STANDAR NASIONAL</span>
+                                    </div>
+                                    <div class="fw-bold text-dark fs-6">BI-KANTIN RESMI</div>
+                                    <div class="text-muted small mb-2" style="font-size: 0.75rem;">NMID: ID102030405060</div>
+
+                                    <!-- QRIS SVG Mockup -->
+                                    <div class="d-flex justify-content-center my-2">
+                                        <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect width="180" height="180" rx="8" fill="white"/>
+                                            <!-- Top-left position marker -->
+                                            <rect x="15" y="15" width="45" height="45" fill="black"/>
+                                            <rect x="22" y="22" width="31" height="31" fill="white"/>
+                                            <rect x="28" y="28" width="19" height="19" fill="black"/>
+                                            <!-- Top-right position marker -->
+                                            <rect x="120" y="15" width="45" height="45" fill="black"/>
+                                            <rect x="127" y="22" width="31" height="31" fill="white"/>
+                                            <rect x="133" y="28" width="19" height="19" fill="black"/>
+                                            <!-- Bottom-left position marker -->
+                                            <rect x="15" y="120" width="45" height="45" fill="black"/>
+                                            <rect x="22" y="127" width="31" height="31" fill="white"/>
+                                            <rect x="28" y="133" width="19" height="19" fill="black"/>
+                                            <!-- Simulated Data Pixels -->
+                                            <rect x="70" y="18" width="8" height="8" fill="black"/>
+                                            <rect x="85" y="18" width="8" height="8" fill="black"/>
+                                            <rect x="100" y="18" width="8" height="8" fill="black"/>
+                                            <rect x="70" y="32" width="8" height="8" fill="black"/>
+                                            <rect x="92" y="32" width="8" height="8" fill="black"/>
+                                            <rect x="75" y="46" width="8" height="8" fill="black"/>
+                                            <rect x="85" y="52" width="8" height="8" fill="black"/>
+                                            <rect x="18" y="70" width="8" height="8" fill="black"/>
+                                            <rect x="32" y="70" width="8" height="8" fill="black"/>
+                                            <rect x="46" y="75" width="8" height="8" fill="black"/>
+                                            <rect x="18" y="85" width="8" height="8" fill="black"/>
+                                            <rect x="32" y="98" width="8" height="8" fill="black"/>
+                                            <rect x="125" y="70" width="8" height="8" fill="black"/>
+                                            <rect x="145" y="75" width="8" height="8" fill="black"/>
+                                            <rect x="132" y="88" width="8" height="8" fill="black"/>
+                                            <rect x="150" y="95" width="8" height="8" fill="black"/>
+                                            <rect x="70" y="125" width="8" height="8" fill="black"/>
+                                            <rect x="90" y="132" width="8" height="8" fill="black"/>
+                                            <rect x="75" y="145" width="8" height="8" fill="black"/>
+                                            <rect x="100" y="150" width="8" height="8" fill="black"/>
+                                            <rect x="125" y="125" width="8" height="8" fill="black"/>
+                                            <rect x="140" y="132" width="8" height="8" fill="black"/>
+                                            <rect x="128" y="145" width="8" height="8" fill="black"/>
+                                            <rect x="150" y="150" width="8" height="8" fill="black"/>
+                                            <!-- Center Logo Badge -->
+                                            <rect x="68" y="68" width="44" height="44" rx="6" fill="#dc3545"/>
+                                            <text x="90" y="87" fill="white" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">BI</text>
+                                            <text x="90" y="99" fill="white" font-size="8" font-weight="bold" font-family="sans-serif" text-anchor="middle">KANTIN</text>
+                                        </svg>
+                                    </div>
+
+                                    <div class="badge bg-light text-danger border border-danger px-3 py-1 fs-6 mt-1">
+                                        Total: <strong>Rp {{ number_format($totalKeranjang, 0, ',', '.') }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 @else
                     <div class="p-5 text-center text-muted">
                         <i class="bi bi-cart-x display-3 mb-2 text-secondary opacity-50"></i>
@@ -329,14 +501,89 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
                     @if(count($cart ?? []) > 0)
                         <!-- Checkout dengan DB::transaction (Catatan No. 11) -->
-                        <form action="{{ route('siswa.cart.checkout') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-success fw-bold">
-                                <i class="bi bi-check-circle me-1"></i> Checkout Sekarang (Rp {{ number_format($totalKeranjang, 0, ',', '.') }})
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-success fw-bold" onclick="document.getElementById('formCheckout').submit()">
+                            <i class="bi bi-check-circle me-1"></i> <span id="btnCheckoutText">Checkout & Bayar Cash (Rp {{ number_format($totalKeranjang, 0, ',', '.') }})</span>
+                        </button>
                     @endif
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tampilkan Kode QRIS Pesanan -->
+<div class="modal fade" id="modalLihatQris" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-qr-code me-2"></i>QRIS Pembayaran Kantin
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="qris-box text-center mb-3">
+                    <div class="bg-danger text-white py-1 px-3 rounded-2 fw-bold d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="bi bi-qr-code"></i> QRIS</span>
+                        <span style="font-size: 0.7rem; letter-spacing: 1px;">STANDAR NASIONAL</span>
+                    </div>
+                    <div class="fw-bold text-dark fs-5">BI-KANTIN RESMI</div>
+                    <div class="text-muted small mb-2">NMID: ID102030405060</div>
+
+                    <!-- QR Mockup -->
+                    <div class="d-flex justify-content-center my-3">
+                        <svg width="210" height="210" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="180" height="180" rx="8" fill="white"/>
+                            <rect x="15" y="15" width="45" height="45" fill="black"/>
+                            <rect x="22" y="22" width="31" height="31" fill="white"/>
+                            <rect x="28" y="28" width="19" height="19" fill="black"/>
+                            <rect x="120" y="15" width="45" height="45" fill="black"/>
+                            <rect x="127" y="22" width="31" height="31" fill="white"/>
+                            <rect x="133" y="28" width="19" height="19" fill="black"/>
+                            <rect x="15" y="120" width="45" height="45" fill="black"/>
+                            <rect x="22" y="127" width="31" height="31" fill="white"/>
+                            <rect x="28" y="133" width="19" height="19" fill="black"/>
+                            <rect x="70" y="18" width="8" height="8" fill="black"/>
+                            <rect x="85" y="18" width="8" height="8" fill="black"/>
+                            <rect x="100" y="18" width="8" height="8" fill="black"/>
+                            <rect x="70" y="32" width="8" height="8" fill="black"/>
+                            <rect x="92" y="32" width="8" height="8" fill="black"/>
+                            <rect x="75" y="46" width="8" height="8" fill="black"/>
+                            <rect x="85" y="52" width="8" height="8" fill="black"/>
+                            <rect x="18" y="70" width="8" height="8" fill="black"/>
+                            <rect x="32" y="70" width="8" height="8" fill="black"/>
+                            <rect x="46" y="75" width="8" height="8" fill="black"/>
+                            <rect x="18" y="85" width="8" height="8" fill="black"/>
+                            <rect x="32" y="98" width="8" height="8" fill="black"/>
+                            <rect x="125" y="70" width="8" height="8" fill="black"/>
+                            <rect x="145" y="75" width="8" height="8" fill="black"/>
+                            <rect x="132" y="88" width="8" height="8" fill="black"/>
+                            <rect x="150" y="95" width="8" height="8" fill="black"/>
+                            <rect x="70" y="125" width="8" height="8" fill="black"/>
+                            <rect x="90" y="132" width="8" height="8" fill="black"/>
+                            <rect x="75" y="145" width="8" height="8" fill="black"/>
+                            <rect x="100" y="150" width="8" height="8" fill="black"/>
+                            <rect x="125" y="125" width="8" height="8" fill="black"/>
+                            <rect x="140" y="132" width="8" height="8" fill="black"/>
+                            <rect x="128" y="145" width="8" height="8" fill="black"/>
+                            <rect x="150" y="150" width="8" height="8" fill="black"/>
+                            <rect x="68" y="68" width="44" height="44" rx="6" fill="#dc3545"/>
+                            <text x="90" y="87" fill="white" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">BI</text>
+                            <text x="90" y="99" fill="white" font-size="8" font-weight="bold" font-family="sans-serif" text-anchor="middle">KANTIN</text>
+                        </svg>
+                    </div>
+
+                    <div class="text-muted small">Pesanan: <span id="modalQrisMenuTitle" class="fw-bold text-dark">-</span> (#<span id="modalQrisOrderId">-</span>)</div>
+                    <div class="fs-4 fw-bold text-danger mt-1" id="modalQrisAmount">Rp 0</div>
+                </div>
+
+                <div class="alert alert-secondary small text-start mb-0">
+                    <i class="bi bi-shield-check text-success me-1"></i>
+                    Setelah pembayaran berhasil melalui mobile banking / e-wallet, silakan tunjukkan bukti transaksi ini ke <strong>Kasir Kantin</strong> untuk divalidasi.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -345,8 +592,46 @@
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Real-time Status Polling Script -->
 <script>
+    // Pemilihan Metode Pembayaran di Checkout Modal
+    function selectPaymentMethod(method) {
+        const radioCash = document.getElementById('radioPaymentCash');
+        const radioQris = document.getElementById('radioPaymentQris');
+        const cardCash = document.getElementById('cardOptionCash');
+        const cardQris = document.getElementById('cardOptionQris');
+        const qrisPreview = document.getElementById('qrisPreviewContainer');
+        const btnCheckoutText = document.getElementById('btnCheckoutText');
+        const total = '{{ number_format($totalKeranjang ?? 0, 0, ',', '.') }}';
+
+        if (method === 'QRIS') {
+            radioQris.checked = true;
+            cardQris.classList.add('selected');
+            cardCash.classList.remove('selected');
+            qrisPreview.classList.remove('d-none');
+            if (btnCheckoutText) {
+                btnCheckoutText.innerText = `Checkout & Bayar QRIS (Rp ${total})`;
+            }
+        } else {
+            radioCash.checked = true;
+            cardCash.classList.add('selected');
+            cardQris.classList.remove('selected');
+            qrisPreview.classList.add('d-none');
+            if (btnCheckoutText) {
+                btnCheckoutText.innerText = `Checkout & Bayar Cash (Rp ${total})`;
+            }
+        }
+    }
+
+    // Modal QRIS Pesanan
+    function showQrisModal(orderId, totalHarga, menuName) {
+        document.getElementById('modalQrisOrderId').innerText = orderId;
+        document.getElementById('modalQrisAmount').innerText = 'Rp ' + formatRupiah(totalHarga);
+        document.getElementById('modalQrisMenuTitle').innerText = menuName;
+        const modal = new bootstrap.Modal(document.getElementById('modalLihatQris'));
+        modal.show();
+    }
+
+    // Helper Status Pesanan
     function getStatusBadge(status) {
         let badgeClass = 'bg-secondary';
 
@@ -363,6 +648,22 @@
         }
 
         return `<span class="badge ${badgeClass} px-2 py-1 fs-6">${status}</span>`;
+    }
+
+    // Helper Status Pembayaran
+    function getPaymentStatusBadge(status) {
+        if (status === 'Sudah Dibayar') {
+            return `<span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Sudah Dibayar</span>`;
+        }
+        return `<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Belum Dibayar</span>`;
+    }
+
+    // Helper Metode Pembayaran
+    function getPaymentMethodBadge(method) {
+        if (method && method.toUpperCase() === 'QRIS') {
+            return `<span class="badge bg-danger text-white"><i class="bi bi-qr-code me-1"></i> QRIS</span>`;
+        }
+        return `<span class="badge bg-secondary text-white"><i class="bi bi-cash me-1"></i> Cash</span>`;
     }
 
     function formatRupiah(number) {
@@ -390,7 +691,7 @@
             if (pesanans.length === 0) {
                 tableBody.innerHTML = `
                     <tr id="emptyRow">
-                        <td colspan="6" class="text-center py-4 text-muted">
+                        <td colspan="9" class="text-center py-4 text-muted">
                             <i class="bi bi-receipt display-6 d-block mb-2"></i>
                             Kamu belum memiliki riwayat pesanan.
                         </td>
@@ -402,6 +703,11 @@
             let rowsHtml = '';
             pesanans.forEach(p => {
                 const namaMenu = p.menu ? p.menu.nama_menu : 'Menu Dihapus';
+                const isQris = (p.metode_pembayaran || '').toUpperCase() === 'QRIS';
+                const aksiQris = isQris
+                    ? `<button type="button" class="btn btn-outline-danger btn-sm" onclick="showQrisModal('${p.id}', '${p.total_harga}', '${namaMenu.replace(/'/g, "\\'")}')"><i class="bi bi-qr-code-scan me-1"></i> QRIS</button>`
+                    : '<span class="text-muted small">-</span>';
+
                 rowsHtml += `
                     <tr id="pesanan-row-${p.id}">
                         <td class="ps-3 fw-bold">#${p.id}</td>
@@ -409,7 +715,10 @@
                         <td class="fw-semibold">${namaMenu}</td>
                         <td>${p.jumlah} porsi</td>
                         <td class="text-success fw-bold">Rp ${formatRupiah(p.total_harga)}</td>
-                        <td class="pe-3">${getStatusBadge(p.status)}</td>
+                        <td>${getPaymentMethodBadge(p.metode_pembayaran)}</td>
+                        <td>${getPaymentStatusBadge(p.status_pembayaran)}</td>
+                        <td>${getStatusBadge(p.status)}</td>
+                        <td class="pe-3 text-end">${aksiQris}</td>
                     </tr>
                 `;
             });

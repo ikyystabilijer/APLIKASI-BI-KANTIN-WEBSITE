@@ -16,7 +16,15 @@ class Pesanan extends Model
         'menu_id',
         'jumlah',
         'total_harga',
+        'metode_pembayaran',
+        'status_pembayaran',
         'status',
+    ];
+
+    protected $attributes = [
+        'metode_pembayaran' => 'Cash',
+        'status_pembayaran' => 'Belum Dibayar',
+        'status' => 'Menunggu Konfirmasi',
     ];
 
     public function user()

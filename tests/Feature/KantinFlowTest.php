@@ -56,9 +56,9 @@ class KantinFlowTest extends TestCase
         $createResponse = $this->withSession(['role' => 'admin', 'username' => 'admin_kantin'])
             ->post('/admin/menu', [
                 'nama_menu' => 'Mie Ayam Bakso',
-                'harga'     => 15000,
-                'kategori'  => 'Makanan',
-                'gambar'    => $fakeImage,
+                'harga' => 15000,
+                'kategori' => 'Makanan',
+                'gambar' => $fakeImage,
             ]);
         $createResponse->assertRedirect('/admin');
 
@@ -70,10 +70,10 @@ class KantinFlowTest extends TestCase
 
         // 2. Update menu
         $updateResponse = $this->withSession(['role' => 'admin', 'username' => 'admin_kantin'])
-            ->put('/admin/menu/' . $menu->id, [
+            ->put('/admin/menu/'.$menu->id, [
                 'nama_menu' => 'Mie Ayam Spesial',
-                'harga'     => 17000,
-                'kategori'  => 'Makanan',
+                'harga' => 17000,
+                'kategori' => 'Makanan',
             ]);
         $updateResponse->assertRedirect('/admin');
         $menu->refresh();
@@ -83,15 +83,15 @@ class KantinFlowTest extends TestCase
         // 3. Buat pesanan contoh & update status
         $siswa = User::where('role', 'siswa')->first();
         $pesanan = Pesanan::create([
-            'user_id'     => $siswa->id,
-            'menu_id'     => $menu->id,
-            'jumlah'      => 2,
+            'user_id' => $siswa->id,
+            'menu_id' => $menu->id,
+            'jumlah' => 2,
             'total_harga' => 34000,
-            'status'      => 'Menunggu Konfirmasi',
+            'status' => 'Menunggu Konfirmasi',
         ]);
 
         $statusResponse = $this->withSession(['role' => 'admin', 'username' => 'admin_kantin'])
-            ->put('/admin/pesanan/' . $pesanan->id . '/status', [
+            ->put('/admin/pesanan/'.$pesanan->id.'/status', [
                 'status' => 'Siap Diambil',
             ]);
         $statusResponse->assertRedirect('/admin');
@@ -100,7 +100,7 @@ class KantinFlowTest extends TestCase
 
         // 4. Hapus menu & file gambar
         $deleteResponse = $this->withSession(['role' => 'admin', 'username' => 'admin_kantin'])
-            ->delete('/admin/menu/' . $menu->id);
+            ->delete('/admin/menu/'.$menu->id);
         $deleteResponse->assertRedirect('/admin');
 
         $this->assertNull(Menu::find($menu->id));
@@ -116,7 +116,7 @@ class KantinFlowTest extends TestCase
         $cartAddResponse = $this->withSession(['user_id' => $siswa->id, 'role' => 'siswa', 'username' => 'budi_siswa'])
             ->post('/siswa/keranjang', [
                 'menu_id' => $menu->id,
-                'jumlah'  => 2,
+                'jumlah' => 2,
             ]);
         $cartAddResponse->assertRedirect('/siswa');
         $cartAddResponse->assertSessionHas('cart');
@@ -124,21 +124,21 @@ class KantinFlowTest extends TestCase
         // 2. Siswa checkout keranjang belanja dengan DB Transaction (Catatan No. 11)
         $cartData = [
             $menu->id => [
-                'menu_id'   => $menu->id,
+                'menu_id' => $menu->id,
                 'nama_menu' => $menu->nama_menu,
-                'harga'     => $menu->harga,
-                'jumlah'    => 2,
-                'subtotal'  => $menu->harga * 2,
-                'gambar'    => null,
-                'kategori'  => $menu->kategori,
+                'harga' => $menu->harga,
+                'jumlah' => 2,
+                'subtotal' => $menu->harga * 2,
+                'gambar' => null,
+                'kategori' => $menu->kategori,
             ],
         ];
 
         $checkoutResponse = $this->withSession([
-            'user_id'  => $siswa->id,
-            'role'     => 'siswa',
+            'user_id' => $siswa->id,
+            'role' => 'siswa',
             'username' => 'budi_siswa',
-            'cart'     => $cartData,
+            'cart' => $cartData,
         ])->post('/siswa/checkout');
 
         $checkoutResponse->assertRedirect('/siswa');
@@ -152,14 +152,159 @@ class KantinFlowTest extends TestCase
         $realtimeResponse = $this->withSession(['user_id' => $siswa->id, 'role' => 'siswa', 'username' => 'budi_siswa'])
             ->getJson('/siswa/status-pesanan');
         $realtimeResponse->assertStatus(200);
-        $realtimeResponse->assertJsonFragment(['id' => $pesanan->id]);
+        $realtimeResponse->assertJsonFragment([
+            'id' => $pesanan->id,
+            'metode_pembayaran' => 'Cash',
+            'status_pembayaran' => 'Belum Dibayar',
+        ]);
+    }
+
+    public function test_siswa_can_checkout_with_cash_and_qris_options(): void
+    {
+        $siswa = User::where('role', 'siswa')->first();
+        $menu = Menu::first();
+
+        // 1. Checkout dengan QRIS
+        $cartQris = [
+            $menu->id => [
+                'menu_id' => $menu->id,
+                'nama_menu' => $menu->nama_menu,
+                'harga' => $menu->harga,
+                'jumlah' => 1,
+                'subtotal' => $menu->harga,
+                'gambar' => null,
+                'kategori' => $menu->kategori,
+            ],
+        ];
+
+        $checkoutQrisResponse = $this->withSession([
+            'user_id' => $siswa->id,
+            'role' => 'siswa',
+            'username' => 'budi_siswa',
+            'cart' => $cartQris,
+        ])->post('/siswa/checkout', [
+            'metode_pembayaran' => 'QRIS',
+        ]);
+
+        $checkoutQrisResponse->assertRedirect('/siswa');
+        $pesananQris = Pesanan::where('user_id', $siswa->id)->latest('id')->first();
+        $this->assertEquals('QRIS', $pesananQris->metode_pembayaran);
+        $this->assertEquals('Belum Dibayar', $pesananQris->status_pembayaran);
+
+        // 2. Quick Order dengan Cash
+        $pesanCashResponse = $this->withSession([
+            'user_id' => $siswa->id,
+            'role' => 'siswa',
+            'username' => 'budi_siswa',
+        ])->post('/siswa/pesan', [
+            'menu_id' => $menu->id,
+            'jumlah' => 3,
+            'metode_pembayaran' => 'Cash',
+        ]);
+
+        $pesanCashResponse->assertRedirect('/siswa');
+        $pesananCash = Pesanan::where('user_id', $siswa->id)->latest('id')->first();
+        $this->assertEquals('Cash', $pesananCash->metode_pembayaran);
+        $this->assertEquals('Belum Dibayar', $pesananCash->status_pembayaran);
+        $this->assertEquals($menu->harga * 3, $pesananCash->total_harga);
+    }
+
+    public function test_kasir_can_view_orders_and_validate_payment(): void
+    {
+        $siswa = User::where('role', 'siswa')->first();
+        $menu = Menu::first();
+
+        $pesanan = Pesanan::create([
+            'user_id' => $siswa->id,
+            'menu_id' => $menu->id,
+            'jumlah' => 2,
+            'total_harga' => $menu->harga * 2,
+            'metode_pembayaran' => 'QRIS',
+            'status_pembayaran' => 'Belum Dibayar',
+            'status' => 'Menunggu Konfirmasi',
+        ]);
+
+        // Kasir melihat pesanan di dashboard
+        $kasirResponse = $this->withSession(['role' => 'kasir', 'username' => 'Kasir_kantin'])
+            ->get('/kasir');
+        $kasirResponse->assertStatus(200);
+        $kasirResponse->assertSee('Validasi Pembayaran');
+        $kasirResponse->assertSee('QRIS');
+        $kasirResponse->assertSee('Belum Dibayar');
+
+        // Kasir memvalidasi pembayaran
+        $validasiResponse = $this->withSession(['role' => 'kasir', 'username' => 'Kasir_kantin'])
+            ->put('/kasir/pesanan/'.$pesanan->id.'/validasi', [
+                'status_pembayaran' => 'Sudah Dibayar',
+            ]);
+        $validasiResponse->assertRedirect();
+
+        $pesanan->refresh();
+        $this->assertEquals('Sudah Dibayar', $pesanan->status_pembayaran);
+        // Otomatis lanjut ke Sedang Diproses
+        $this->assertEquals('Sedang Diproses', $pesanan->status);
+
+        // Kasir membatalkan validasi (toggle kembali ke Belum Dibayar)
+        $batalValidasi = $this->withSession(['role' => 'kasir', 'username' => 'Kasir_kantin'])
+            ->put('/kasir/pesanan/'.$pesanan->id.'/validasi', [
+                'status_pembayaran' => 'Belum Dibayar',
+            ]);
+        $batalValidasi->assertRedirect();
+        $pesanan->refresh();
+        $this->assertEquals('Belum Dibayar', $pesanan->status_pembayaran);
+    }
+
+    public function test_kasir_can_filter_by_metode_and_status_pembayaran(): void
+    {
+        $siswa = User::where('role', 'siswa')->first();
+        $menu = Menu::first();
+
+        $p1 = Pesanan::create([
+            'user_id' => $siswa->id,
+            'menu_id' => $menu->id,
+            'jumlah' => 1,
+            'total_harga' => $menu->harga,
+            'metode_pembayaran' => 'QRIS',
+            'status_pembayaran' => 'Belum Dibayar',
+            'status' => 'Menunggu Konfirmasi',
+        ]);
+
+        $p2 = Pesanan::create([
+            'user_id' => $siswa->id,
+            'menu_id' => $menu->id,
+            'jumlah' => 1,
+            'total_harga' => $menu->harga,
+            'metode_pembayaran' => 'Cash',
+            'status_pembayaran' => 'Sudah Dibayar',
+            'status' => 'Sedang Diproses',
+        ]);
+
+        // Filter QRIS
+        $responseQris = $this->withSession(['role' => 'kasir', 'username' => 'Kasir_kantin'])
+            ->get('/kasir?metode_pembayaran=QRIS');
+        $responseQris->assertStatus(200);
+        $responseQris->assertSee('#'.$p1->id);
+
+        // Filter Status Pembayaran Sudah Dibayar
+        $responseSudah = $this->withSession(['role' => 'kasir', 'username' => 'Kasir_kantin'])
+            ->get('/kasir?status_pembayaran=Sudah+Dibayar');
+        $responseSudah->assertStatus(200);
+        $responseSudah->assertSee('#'.$p2->id);
     }
 
     public function test_role_protection(): void
     {
-        // Siswa tidak boleh akses /admin
+        // Siswa tidak boleh akses /admin atau /kasir
         $response = $this->withSession(['role' => 'siswa'])->get('/admin');
         $response->assertStatus(403);
+        $responseKasir = $this->withSession(['role' => 'siswa'])->get('/kasir');
+        $responseKasir->assertStatus(403);
+
+        // Kasir tidak boleh akses /admin atau /siswa
+        $responseAdmin = $this->withSession(['role' => 'kasir'])->get('/admin');
+        $responseAdmin->assertStatus(403);
+        $responseSiswa = $this->withSession(['role' => 'kasir'])->get('/siswa');
+        $responseSiswa->assertStatus(403);
 
         // Admin tidak boleh akses /siswa
         $response = $this->withSession(['role' => 'admin'])->get('/siswa');

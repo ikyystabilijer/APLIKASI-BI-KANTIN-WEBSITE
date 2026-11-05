@@ -158,8 +158,10 @@
                             <th>Menu</th>
                             <th>Jumlah</th>
                             <th>Total Harga</th>
+                            <th>Metode</th>
+                            <th>Pembayaran</th>
                             <th>Status Saat Ini</th>
-                            <th class="text-end pe-3" style="min-width: 250px;">Ubah Status</th>
+                            <th class="text-end pe-3" style="min-width: 280px;">Ubah Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -178,6 +180,20 @@
                                 <td>{{ $p->jumlah }} porsi</td>
                                 <td class="text-success fw-bold">Rp {{ number_format($p->total_harga, 0, ',', '.') }}</td>
                                 <td>
+                                    @if(strtoupper($p->metode_pembayaran) === 'QRIS')
+                                        <span class="badge bg-danger text-white"><i class="bi bi-qr-code me-1"></i> QRIS</span>
+                                    @else
+                                        <span class="badge bg-secondary text-white"><i class="bi bi-cash me-1"></i> Cash</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($p->status_pembayaran === 'Sudah Dibayar')
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Sudah Dibayar</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Belum Dibayar</span>
+                                    @endif
+                                </td>
+                                <td>
                                     @php
                                         $badgeColor = match($p->status) {
                                             'Menunggu Konfirmasi' => 'bg-warning text-dark',
@@ -194,6 +210,10 @@
                                     <form action="{{ route('admin.pesanan.status', $p->id) }}" method="POST" class="d-inline-flex gap-1">
                                         @csrf
                                         @method('PUT')
+                                        <select name="status_pembayaran" class="form-select form-select-sm" style="width: auto;">
+                                            <option value="Belum Dibayar" {{ $p->status_pembayaran === 'Belum Dibayar' ? 'selected' : '' }}>Belum Bayar</option>
+                                            <option value="Sudah Dibayar" {{ $p->status_pembayaran === 'Sudah Dibayar' ? 'selected' : '' }}>Sudah Bayar</option>
+                                        </select>
                                         <select name="status" class="form-select form-select-sm" style="width: auto;">
                                             <option value="Menunggu Konfirmasi" {{ $p->status === 'Menunggu Konfirmasi' ? 'selected' : '' }}>Menunggu Konfirmasi</option>
                                             <option value="Sedang Diproses" {{ $p->status === 'Sedang Diproses' ? 'selected' : '' }}>Sedang Diproses</option>
@@ -209,7 +229,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">
+                                <td colspan="10" class="text-center py-4 text-muted">
                                     <i class="bi bi-inbox display-6 d-block mb-2"></i>
                                     Belum ada pesanan masuk.
                                 </td>
