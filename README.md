@@ -6,16 +6,33 @@ Sistem informasi dan pemesanan kantin sekolah berbasis web yang dibangun menggun
 
 ## ✨ Fitur Utama
 
-- 🔐 **Autentikasi & Multi-Role**: Sistem login role-based untuk **Admin** dan **Siswa**.
+- 🔐 **Autentikasi & Multi-Role**: Sistem login role-based untuk **Admin**, **Kasir**, dan **Siswa** dengan middleware proteksi hak akses per-role.
 - 👨‍🍳 **Panel Admin**:
-  - Ringkasan statistik (Total Menu, Pesanan Menunggu Konfirmasi, Pesanan Masuk Hari Ini, Total Pesanan).
+  - Ringkasan statistik (Total Menu, Pesanan Menunggu Konfirmasi, Pesanan Masuk Hari Ini, Total Pesanan, **Pendapatan Hari Ini**).
   - Manajemen Menu Makanan & Minuman (Tambah, Edit, Hapus / CRUD) dilengkapi validasi **Upload Gambar Menu**.
+  - **Manajemen Akun Pengguna** (CRUD): Tambah, Edit, Hapus akun (Admin, Kasir, Siswa) dengan fitur pencarian & filter berdasarkan role, serta pengaturan **status aktif/nonaktif akun**.
   - Monitoring pesanan masuk dengan pencatatan waktu otomatis dan pengubahan status secara instan (*Menunggu Konfirmasi*, *Sedang Diproses*, *Siap Diambil*, *Selesai*, *Dibatalkan*).
+  - Pengelolaan **status pembayaran** pesanan (*Belum Dibayar*, *Sudah Dibayar*).
+- 💰 **Panel Kasir** *(Baru)*:
+  - Dashboard ringkasan: jumlah pesanan Belum Dibayar, Sudah Dibayar, rasio metode pembayaran (Cash / QRIS), dan **Total Pendapatan Tervalidasi**.
+  - **Validasi Pembayaran**: Kasir dapat memvalidasi atau membatalkan validasi pembayaran setiap pesanan (Cash / QRIS).
+  - **Filter & Pencarian**: Filter berdasarkan status pembayaran, metode pembayaran, status pesanan, dan pencarian berdasarkan ID pesanan atau nama siswa.
+  - Update status pengerjaan pesanan secara langsung dari tabel.
+  - **Tampilkan QRIS Kasir**: Modal popup berisi kode QR mockup QRIS resmi kantin untuk ditunjukkan ke siswa yang membayar via QRIS.
 - 🧑‍🎓 **Panel Siswa**:
   - Katalog makanan & minuman dengan gambar visual menarik.
   - **Keranjang Belanja (Session Storage)**: Siswa dapat menambahkan beberapa menu sekaligus ke keranjang belanja.
   - **Checkout Aman (DB Transaction)**: Proses checkout multi-item terproteksi transaksi database untuk menjamin integritas data.
+  - **Pilihan Metode Pembayaran**: Siswa dapat memilih pembayaran **Cash** atau **QRIS** saat memesan.
   - Monitoring status pesanan secara **real-time** (auto-refresh tanpa perlu reload halaman penuh).
+- 💳 **Sistem Pembayaran** *(Baru)*:
+  - Dukungan dua metode pembayaran: **Cash (Tunai)** dan **QRIS**.
+  - Tracking status pembayaran per pesanan (*Belum Dibayar* / *Sudah Dibayar*).
+  - Validasi pembayaran oleh Kasir dengan auto-update status pesanan ke *Sedang Diproses* saat pembayaran tervalidasi.
+- 👥 **Manajemen Pengguna** *(Baru)*:
+  - Admin dapat mengelola semua akun pengguna (CRUD).
+  - Fitur **status aktif/nonaktif** akun — akun yang dinonaktifkan tidak dapat login.
+  - Dukungan **Soft Deletes** — data pengguna yang dihapus masih tersimpan di database.
 
 ---
 
@@ -132,8 +149,9 @@ Setelah menjalankan migrasi dan seeder, Anda dapat langsung login menggunakan ak
 
 | Role | Username | Password | Deskripsi Halaman |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin_kantin` | `admin123` | Dashboard pengelolaan menu (CRUD) & pemantauan status pesanan |
-| **Siswa** | `budi_siswa` | `123` | Katalog menu, pemesanan, dan monitoring status live |
+| **Admin** | `admin_kantin` | `admin123` | Dashboard pengelolaan menu (CRUD), manajemen akun pengguna, & pemantauan status pesanan |
+| **Kasir** | `Kasir_kantin` | `kasir123` | Dashboard validasi pembayaran (Cash/QRIS), filter pesanan, & update status pengerjaan |
+| **Siswa** | `budi_siswa` | `123` | Katalog menu, pemesanan (Cash/QRIS), keranjang belanja, & monitoring status live |
 
 ---
 
@@ -144,8 +162,11 @@ Database `db_bikantin` terdiri dari 3 tabel utama:
 1. **`users`**
    - `id` (Primary Key, Auto Increment)
    - `username` (VARCHAR 50)
-   - `password` (VARCHAR 50)
-   - `role` (ENUM: `'admin'`, `'siswa'`)
+   - `email` (VARCHAR 255, Nullable, Unique)
+   - `password` (VARCHAR 255)
+   - `role` (VARCHAR 20: `'admin'`, `'kasir'`, `'siswa'`)
+   - `status` (BOOLEAN, default `true` — aktif/nonaktif akun)
+   - `deleted_at` (Timestamp, Nullable — Soft Deletes)
 2. **`menu`**
    - `id` (Primary Key, Auto Increment)
    - `nama_menu` (VARCHAR 100)
@@ -159,6 +180,8 @@ Database `db_bikantin` terdiri dari 3 tabel utama:
    - `menu_id` (Foreign Key -> `menu.id`)
    - `jumlah` (INT)
    - `total_harga` (INT)
+   - `metode_pembayaran` (VARCHAR 50, default `'Cash'` — Cash / QRIS)
+   - `status_pembayaran` (VARCHAR 50, default `'Belum Dibayar'` — Belum Dibayar / Sudah Dibayar)
    - `status` (VARCHAR 100, default `'Menunggu Konfirmasi'`)
    - `created_at` & `updated_at` (Timestamps)
 
@@ -166,7 +189,7 @@ Database `db_bikantin` terdiri dari 3 tabel utama:
 
 ## 🧪 Menjalankan Pengujian (Automated Tests)
 
-Project ini telah dilengkapi dengan unit/feature test otomatis untuk memvalidasi alur autentikasi, CRUD menu, proteksi hak akses, dan proses pemesanan:
+Project ini telah dilengkapi dengan unit/feature test otomatis untuk memvalidasi alur autentikasi, CRUD menu, proteksi hak akses, manajemen akun pengguna, dan proses pemesanan:
 ```bash
 php artisan test
 ```
