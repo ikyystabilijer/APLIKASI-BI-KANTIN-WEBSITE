@@ -39,6 +39,15 @@
             color: #94a3b8;
             font-size: 1.25rem;
         }
+        .brand-logo-navbar {
+            width: 34px;
+            height: 34px;
+            object-fit: contain;
+            background: #ffffff;
+            border-radius: 50%;
+            padding: 0.15rem;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -47,7 +56,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-bold" href="{{ route('admin.dashboard') }}">
-            <i class="bi bi-shield-lock-fill me-1 text-primary"></i> BI-Kantin <span class="badge bg-primary fs-6">Admin</span>
+            <img src="{{ asset('images/logo-bi-kantin.png') }}" alt="Logo BI-Kantin" class="brand-logo-navbar me-1"> BI-Kantin <span class="badge bg-primary fs-6">Admin</span>
         </a>
         <div class="d-flex align-items-center text-white">
             <span class="me-3 small d-none d-md-inline">

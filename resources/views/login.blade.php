@@ -32,6 +32,16 @@
             padding: 2rem 1.5rem 1.5rem;
             text-align: center;
         }
+        .brand-logo-login {
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 50%;
+            padding: 0.35rem;
+        }
         .btn-primary {
             background-color: #0d6efd;
             border-color: #0d6efd;
@@ -44,7 +54,7 @@
 
 <div class="login-card">
     <div class="login-header">
-        <i class="bi bi-shop-window display-4"></i>
+        <img src="{{ asset('images/logo-bi-kantin.png') }}" alt="Logo BI-Kantin" class="brand-logo-login">
         <h4 class="mt-2 mb-0 fw-bold">BI-Kantin</h4>
         <small class="opacity-75">Sistem Pemesanan Kantin</small>
     </div>

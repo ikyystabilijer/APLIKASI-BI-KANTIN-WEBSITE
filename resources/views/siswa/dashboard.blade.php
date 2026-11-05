@@ -84,6 +84,15 @@
             display: inline-block;
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
         }
+        .brand-logo-navbar {
+            width: 34px;
+            height: 34px;
+            object-fit: contain;
+            background: #ffffff;
+            border-radius: 50%;
+            padding: 0.15rem;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -92,7 +101,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
     <div class="container">
         <a class="navbar-brand fw-bold" href="{{ route('siswa.dashboard') }}">
-            <i class="bi bi-shop me-1"></i> BI-Kantin <span class="badge bg-light text-primary fs-6">Siswa</span>
+            <img src="{{ asset('images/logo-bi-kantin.png') }}" alt="Logo BI-Kantin" class="brand-logo-navbar me-1"> BI-Kantin <span class="badge bg-light text-primary fs-6">Siswa</span>
         </a>
         <div class="d-flex align-items-center gap-2">
             <!-- Tombol Keranjang Belanja (Catatan Guru No. 10) -->

@@ -30,6 +30,15 @@
             display: inline-block;
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
         }
+        .brand-logo-navbar {
+            width: 34px;
+            height: 34px;
+            object-fit: contain;
+            background: #ffffff;
+            border-radius: 50%;
+            padding: 0.15rem;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -38,7 +47,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
     <div class="container">
         <span class="navbar-brand fw-bold">
-            <i class="bi bi-shop me-1 text-warning"></i> BI-Kantin <span class="badge bg-warning text-dark fs-6">Kasir</span>
+            <img src="{{ asset('images/logo-bi-kantin.png') }}" alt="Logo BI-Kantin" class="brand-logo-navbar me-1"> BI-Kantin <span class="badge bg-warning text-dark fs-6">Kasir</span>
         </span>
         <div class="d-flex align-items-center gap-2">
             <!-- Tombol Tampilkan QRIS Kasir -->
