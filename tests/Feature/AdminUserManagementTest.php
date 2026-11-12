@@ -61,4 +61,45 @@ class AdminUserManagementTest extends TestCase
 
         $response->assertRedirect('/kasir');
     }
+
+    public function test_admin_cannot_delete_own_account(): void
+    {
+        $this->seed();
+        $admin = User::where('role', 'admin')->firstOrFail();
+
+        $response = $this->actingAs($admin)
+            ->withSession(['role' => 'admin', 'user_id' => $admin->id])
+            ->delete('/admin/users/'.$admin->id);
+
+        $response->assertSessionHas('error', 'Akun admin yang sedang digunakan tidak dapat dihapus.');
+        $this->assertDatabaseHas('users', [
+            'id' => $admin->id,
+            'deleted_at' => null,
+        ]);
+    }
+
+    public function test_dashboard_does_not_place_modals_inside_tbody(): void
+    {
+        $this->seed();
+        $admin = User::where('role', 'admin')->firstOrFail();
+
+        $response = $this->actingAs($admin)
+            ->withSession(['role' => 'admin', 'user_id' => $admin->id])
+            ->get('/admin');
+
+        $response->assertOk();
+        $content = $response->getContent();
+
+        // Check that modal tags are NOT inside tbody
+        preg_match_all('/<tbody>(.*?)<\/tbody>/s', $content, $matches);
+        $this->assertNotEmpty($matches[1]);
+        foreach ($matches[1] as $tbody) {
+            $this->assertStringNotContainsString('class="modal', $tbody);
+        }
+
+        // Verify delete button has type="submit" and delete action for other users
+        $otherUser = User::where('id', '!=', $admin->id)->firstOrFail();
+        $response->assertSee(route('admin.users.destroy', $otherUser), false);
+        $response->assertSee('type="submit"', false);
+    }
 }

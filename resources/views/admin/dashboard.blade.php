@@ -254,13 +254,18 @@
     <div class="card mb-4">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-primary me-2"></i>Manajemen Akun</h5>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahUser"><i class="bi bi-person-plus me-1"></i>Tambah Akun</button>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahUser"><i class="bi bi-person-plus me-1"></i>Tambah Akun</button>
         </div>
         <div class="card-body border-bottom">
-            <form method="GET" action="{{ route('admin.dashboard') }}" class="row g-2">
-                <div class="col-md-6"><input type="search" name="search" class="form-control" value="{{ request('search') }}" placeholder="Cari username"></div>
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="row g-2 align-items-center">
+                <div class="col-md-5"><input type="search" name="search" class="form-control" value="{{ request('search') }}" placeholder="Cari username"></div>
                 <div class="col-md-4"><select name="role" class="form-select"><option value="">Semua Role</option><option value="admin" @selected(request('role') === 'admin')>Admin</option><option value="siswa" @selected(request('role') === 'siswa')>Siswa</option><option value="kasir" @selected(request('role') === 'kasir')>Kasir</option></select></div>
-                <div class="col-md-2"><button class="btn btn-outline-primary w-100">Filter</button></div>
+                <div class="col-md-3 d-flex gap-1">
+                    <button type="submit" class="btn btn-outline-primary flex-grow-1"><i class="bi bi-funnel me-1"></i>Filter</button>
+                    @if(request()->hasAny(['search', 'role']))
+                        <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary" title="Reset Filter"><i class="bi bi-x-lg"></i></a>
+                    @endif
+                </div>
             </form>
         </div>
         <div class="table-responsive">
@@ -273,13 +278,13 @@
                         <td><span class="badge bg-secondary">{{ ucfirst($user->role) }}</span></td>
                         <td><span class="badge {{ $user->status ? 'bg-success' : 'bg-danger' }}">{{ $user->status ? 'Aktif' : 'Nonaktif' }}</span></td>
                         <td class="text-end pe-3">
-                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditUser{{ $user->id }}" title="Edit"><i class="bi bi-pencil-square"></i></button>
-                            @if($user->id !== auth()->id())
-                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus akun ini?')">@csrf @method('DELETE')<button class="btn btn-danger btn-sm" title="Hapus"><i class="bi bi-trash"></i></button></form>
+                            <button type="button" class="btn btn-warning btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditUser{{ $user->id }}" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                            @php $currentAuthId = auth()->id() ?? session('user_id'); @endphp
+                            @if($user->id !== $currentAuthId)
+                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalHapusUser{{ $user->id }}" title="Hapus"><i class="bi bi-trash"></i></button>
                             @endif
                         </td>
                     </tr>
-                    <div class="modal fade" id="modalEditUser{{ $user->id }}" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form action="{{ route('admin.users.update', $user) }}" method="POST">@csrf @method('PUT')<div class="modal-header"><h5 class="modal-title">Edit Akun</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input name="username" class="form-control mb-2" value="{{ $user->username }}" required><input name="email" type="email" class="form-control mb-2" value="{{ $user->email }}" placeholder="Email"><input name="password" type="password" class="form-control mb-2" placeholder="Password baru (opsional)"><select name="role" class="form-select mb-2"><option value="admin" @selected($user->role === 'admin')>Admin</option><option value="siswa" @selected($user->role === 'siswa')>Siswa</option><option value="kasir" @selected($user->role === 'kasir')>Kasir</option></select><select name="status" class="form-select"><option value="1" @selected($user->status)>Aktif</option><option value="0" @selected(!$user->status)>Nonaktif</option></select></div><div class="modal-footer"><button class="btn btn-primary">Simpan</button></div></form></div></div></div>
                 @empty
                     <tr><td colspan="5" class="text-center text-muted py-4">Belum ada akun.</td></tr>
                 @endforelse
@@ -295,7 +300,7 @@
             <h5 class="card-title mb-0 fw-bold text-dark">
                 <i class="bi bi-card-list text-primary me-2"></i>Pengelolaan Menu Kantin
             </h5>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahMenu">
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTambahMenu">
                 <i class="bi bi-plus-circle me-1"></i> Tambah Menu Baru
             </button>
         </div>
@@ -331,68 +336,14 @@
                                 </td>
                                 <td>Rp {{ number_format($m->harga, 0, ',', '.') }}</td>
                                 <td class="text-end pe-3">
-                                    <button class="btn btn-warning btn-sm text-dark me-1" data-bs-toggle="modal" data-bs-target="#modalEditMenu{{ $m->id }}" title="Edit">
+                                    <button type="button" class="btn btn-warning btn-sm text-dark me-1" data-bs-toggle="modal" data-bs-target="#modalEditMenu{{ $m->id }}" title="Edit">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <form action="{{ route('admin.menu.destroy', $m->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus menu ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalHapusMenu{{ $m->id }}" title="Hapus">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
-
-                            <!-- Modal Edit Menu -->
-                            <div class="modal fade" id="modalEditMenu{{ $m->id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <form action="{{ route('admin.menu.update', $m->id) }}" method="POST" enctype="multipart/form-data">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="modal-header">
-                                                <h5 class="modal-title fw-bold">Edit Menu</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Nama Menu</label>
-                                                    <input type="text" name="nama_menu" class="form-control" value="{{ $m->nama_menu }}" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Kategori</label>
-                                                    <select name="kategori" class="form-select" required>
-                                                        <option value="Makanan" {{ $m->kategori === 'Makanan' ? 'selected' : '' }}>Makanan</option>
-                                                        <option value="Minuman" {{ $m->kategori === 'Minuman' ? 'selected' : '' }}>Minuman</option>
-                                                        <option value="Camilan" {{ $m->kategori === 'Camilan' ? 'selected' : '' }}>Camilan</option>
-                                                        <option value="Lainnya" {{ !in_array($m->kategori, ['Makanan', 'Minuman', 'Camilan']) ? 'selected' : '' }}>Lainnya</option>
-                                                    </select>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Harga (Rp)</label>
-                                                    <input type="number" name="harga" class="form-control" value="{{ $m->harga }}" min="0" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Upload Gambar Baru (Opsional)</label>
-                                                    @if($m->gambar)
-                                                        <div class="mb-2">
-                                                            <small class="text-muted d-block">Gambar saat ini:</small>
-                                                            <img src="{{ asset('storage/' . $m->gambar) }}" alt="{{ $m->nama_menu }}" class="menu-thumb">
-                                                        </div>
-                                                    @endif
-                                                    <input type="file" name="gambar" class="form-control" accept="image/*">
-                                                    <small class="text-muted">Format: JPG, PNG, WEBP (Maks: 2MB)</small>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
                         @empty
                             <tr>
                                 <td colspan="6" class="text-center py-4 text-muted">Belum ada data menu.</td>
@@ -405,7 +356,149 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalTambahUser" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form action="{{ route('admin.users.store') }}" method="POST">@csrf<div class="modal-header"><h5 class="modal-title">Tambah Akun</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input name="username" class="form-control mb-2" placeholder="Username" required><input name="email" type="email" class="form-control mb-2" placeholder="Email (opsional)"><input name="password" type="password" class="form-control mb-2" placeholder="Password" required><select name="role" class="form-select"><option value="siswa">Siswa</option><option value="kasir">Kasir</option><option value="admin">Admin</option></select></div><div class="modal-footer"><button class="btn btn-primary">Tambah Akun</button></div></form></div></div></div>
+<!-- Modal Tambah Akun -->
+<div class="modal fade" id="modalTambahUser" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('admin.users.store') }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-plus me-2 text-primary"></i>Tambah Akun</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Username</label>
+                        <input name="username" class="form-control" placeholder="Masukkan username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email (Opsional)</label>
+                        <input name="email" type="email" class="form-control" placeholder="Email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Password</label>
+                        <input name="password" type="password" class="form-control" placeholder="Password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Role</label>
+                        <select name="role" class="form-select">
+                            <option value="siswa">Siswa</option>
+                            <option value="kasir">Kasir</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Tambah Akun</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Akun (Ditempatkan di luar tabel untuk validitas DOM HTML & Bootstrap) -->
+@foreach($users as $user)
+    <div class="modal fade" id="modalEditUser{{ $user->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ route('admin.users.update', $user) }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2 text-warning"></i>Edit Akun</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Username</label>
+                            <input name="username" class="form-control" value="{{ $user->username }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Email</label>
+                            <input name="email" type="email" class="form-control" value="{{ $user->email }}" placeholder="Email (opsional)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Password Baru (Opsional)</label>
+                            <input name="password" type="password" class="form-control" placeholder="Password baru (kosongkan jika tidak diganti)">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Role</label>
+                            <select name="role" class="form-select">
+                                <option value="admin" @selected($user->role === 'admin')>Admin</option>
+                                <option value="siswa" @selected($user->role === 'siswa')>Siswa</option>
+                                <option value="kasir" @selected($user->role === 'kasir')>Kasir</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="1" @selected($user->status)>Aktif</option>
+                                <option value="0" @selected(!$user->status)>Nonaktif</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endforeach
+
+<!-- Modal Edit Menu (Ditempatkan di luar tabel) -->
+@foreach($menus as $m)
+    <div class="modal fade" id="modalEditMenu{{ $m->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ route('admin.menu.update', $m->id) }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Edit Menu</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nama Menu</label>
+                            <input type="text" name="nama_menu" class="form-control" value="{{ $m->nama_menu }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kategori</label>
+                            <select name="kategori" class="form-select" required>
+                                <option value="Makanan" {{ $m->kategori === 'Makanan' ? 'selected' : '' }}>Makanan</option>
+                                <option value="Minuman" {{ $m->kategori === 'Minuman' ? 'selected' : '' }}>Minuman</option>
+                                <option value="Camilan" {{ $m->kategori === 'Camilan' ? 'selected' : '' }}>Camilan</option>
+                                <option value="Lainnya" {{ !in_array($m->kategori, ['Makanan', 'Minuman', 'Camilan']) ? 'selected' : '' }}>Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Harga (Rp)</label>
+                            <input type="number" name="harga" class="form-control" value="{{ $m->harga }}" min="0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Upload Gambar Baru (Opsional)</label>
+                            @if($m->gambar)
+                                <div class="mb-2">
+                                    <small class="text-muted d-block">Gambar saat ini:</small>
+                                    <img src="{{ asset('storage/' . $m->gambar) }}" alt="{{ $m->nama_menu }}" class="menu-thumb">
+                                </div>
+                            @endif
+                            <input type="file" name="gambar" class="form-control" accept="image/*">
+                            <small class="text-muted">Format: JPG, PNG, WEBP (Maks: 2MB)</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endforeach
 
 <!-- Modal Tambah Menu (Dengan Upload Gambar) -->
 <div class="modal fade" id="modalTambahMenu" tabindex="-1" aria-hidden="true">
@@ -450,7 +543,100 @@
     </div>
 </div>
 
+<!-- Modal Konfirmasi Hapus Akun -->
+@foreach($users as $user)
+    @php $currentAuthId = auth()->id() ?? session('user_id'); @endphp
+    @if($user->id !== $currentAuthId)
+        <div class="modal fade" id="modalHapusUser{{ $user->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>Konfirmasi Hapus Akun
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <p class="mb-1 fs-6">Apakah Anda yakin ingin menghapus akun:</p>
+                        <div class="p-3 bg-light rounded-3 my-2 border">
+                            <div class="fw-bold fs-5 text-dark"><i class="bi bi-person-fill text-primary me-1"></i>{{ $user->username }}</div>
+                            <div class="small text-muted">Role: <span class="badge bg-secondary">{{ ucfirst($user->role) }}</span> | Email: {{ $user->email ?: '-' }}</div>
+                        </div>
+                        <small class="text-danger"><i class="bi bi-info-circle me-1"></i>Akun yang dihapus akan dinonaktifkan dari sistem.</small>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger fw-semibold">
+                                <i class="bi bi-trash me-1"></i> Ya, Hapus Akun
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+@endforeach
+
+<!-- Modal Konfirmasi Hapus Menu -->
+@foreach($menus as $m)
+    <div class="modal fade" id="modalHapusMenu{{ $m->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Konfirmasi Hapus Menu
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <p class="mb-1 fs-6">Apakah Anda yakin ingin menghapus menu ini dari daftar?</p>
+                    <div class="p-3 bg-light rounded-3 my-2 border d-flex align-items-center gap-3">
+                        @if($m->gambar)
+                            <img src="{{ asset('storage/' . $m->gambar) }}" alt="{{ $m->nama_menu }}" class="menu-thumb">
+                        @else
+                            <div class="menu-thumb-placeholder"><i class="bi bi-image"></i></div>
+                        @endif
+                        <div>
+                            <div class="fw-bold text-dark fs-5">{{ $m->nama_menu }}</div>
+                            <div class="text-muted small">Rp {{ number_format($m->harga, 0, ',', '.') }} | Kategori: {{ $m->kategori }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <form action="{{ route('admin.menu.destroy', $m->id) }}" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger fw-semibold">
+                            <i class="bi bi-trash me-1"></i> Ya, Hapus Menu
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
+
 <!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Event delegation fallback: pastikan semua tombol modal selalu memunculkan modal
+    document.addEventListener('click', function(e) {
+        const trigger = e.target.closest('[data-bs-toggle="modal"]');
+        if (trigger) {
+            const targetSelector = trigger.getAttribute('data-bs-target');
+            if (targetSelector) {
+                const targetModal = document.querySelector(targetSelector);
+                if (targetModal && typeof bootstrap !== 'undefined') {
+                    const instance = bootstrap.Modal.getOrCreateInstance(targetModal);
+                    instance.show();
+                }
+            }
+        }
+    });
+</script>
 </body>
 </html>

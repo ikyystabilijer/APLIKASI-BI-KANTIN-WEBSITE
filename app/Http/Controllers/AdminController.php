@@ -82,7 +82,8 @@ class AdminController extends Controller
 
     public function destroyUser(User $user)
     {
-        if ($user->id === auth()->id()) {
+        $currentUserId = auth()->id() ?? session('user_id');
+        if ($user->id === $currentUserId) {
             return back()->with('error', 'Akun admin yang sedang digunakan tidak dapat dihapus.');
         }
 

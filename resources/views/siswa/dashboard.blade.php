@@ -105,7 +105,7 @@
         </a>
         <div class="d-flex align-items-center gap-2">
             <!-- Tombol Keranjang Belanja (Catatan Guru No. 10) -->
-            <button class="btn btn-warning btn-sm text-dark position-relative fw-bold" data-bs-toggle="modal" data-bs-target="#modalKeranjang">
+            <button type="button" class="btn btn-warning btn-sm text-dark position-relative fw-bold" data-bs-toggle="modal" data-bs-target="#modalKeranjang">
                 <i class="bi bi-cart3 me-1"></i> Keranjang
                 @php $cartCount = count($cart ?? []); @endphp
                 @if($cartCount > 0)
@@ -236,7 +236,7 @@
                     <span class="live-indicator"></span> Real-time monitoring aktif (otomatis memperbarui status pesanan & validasi pembayaran)
                 </small>
             </div>
-            <button id="btnManualRefresh" class="btn btn-sm btn-outline-secondary">
+            <button type="button" id="btnManualRefresh" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-clockwise me-1"></i> Refresh
             </button>
         </div>
