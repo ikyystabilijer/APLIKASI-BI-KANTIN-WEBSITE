@@ -53,7 +53,7 @@ Ikuti langkah-langkah berikut untuk menjalankan project ini di komputer lokal:
 ### 1. Clone Repository & Masuk ke Folder Project
 Jika mendownload via Git:
 ```bash
-git clone https://github.com/username-anda/bi-kantin-web.git
+git clone (https://github.com/ikyystabilijer/APLIKASI-BI-KANTIN-WEBSITE.git)
 cd bi-kantin-web
 ```
 *(Atau ekstrak file zip project dan buka terminal di dalam direktori `bi-kantin-web`)*.
